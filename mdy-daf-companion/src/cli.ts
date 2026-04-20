@@ -4,6 +4,7 @@ import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
 import { sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
+import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
 import { getLiveStatusText } from "./status/status.js";
 
 async function readStdin(): Promise<string> {
@@ -60,6 +61,12 @@ async function main(): Promise<void> {
     case "resume": {
       const result = await sendDaemonAction(resolveRuntimePaths(), command);
       process.stdout.write(`${JSON.stringify(result)}\n`);
+      return;
+    }
+    case "today": {
+      const date = argValue("--date", new Date().toISOString().slice(0, 10));
+      const daf = await new HebcalDafCalendar().getDafForDate(date);
+      process.stdout.write(`${daf.date}: ${daf.masechta} ${daf.daf}\n`);
       return;
     }
     case "stats":
