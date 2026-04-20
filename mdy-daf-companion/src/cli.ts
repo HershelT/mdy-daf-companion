@@ -5,6 +5,7 @@ import { resolveRuntimePaths } from "./core/paths.js";
 import { getPlayerUrl, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
+import { formatStatsSummary, getTodayStatsSummary } from "./stats/summary.js";
 import { getLiveStatusText } from "./status/status.js";
 
 async function readStdin(): Promise<string> {
@@ -74,7 +75,10 @@ async function main(): Promise<void> {
       process.stdout.write(`${await getPlayerUrl(resolveRuntimePaths())}\n`);
       return;
     }
-    case "stats":
+    case "stats": {
+      process.stdout.write(`${formatStatsSummary(getTodayStatsSummary())}\n`);
+      return;
+    }
     case "doctor": {
       process.stdout.write(
         `${command} is wired into the CLI. The daemon/player implementation arrives in the next phases.\n`

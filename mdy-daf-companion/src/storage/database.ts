@@ -25,6 +25,15 @@ export interface PlaybackProgressRecord {
   updatedAt: string;
 }
 
+export interface DailyStatsRecord {
+  date: string;
+  watchedSeconds: number;
+  codingSeconds: number;
+  dafimCompleted: number;
+  videosTouched: number;
+  updatedAt: string;
+}
+
 export class AppDatabase {
   private db: DatabaseSync;
 
@@ -169,6 +178,70 @@ export class AppDatabase {
       | undefined;
 
     return row ? { ...row, completed: row.completed === 1 } : null;
+  }
+
+  incrementDailyStats(
+    date: string,
+    patch: {
+      watchedSeconds?: number;
+      codingSeconds?: number;
+      dafimCompleted?: number;
+      videosTouched?: number;
+    },
+    updatedAt = nowIso()
+  ): void {
+    this.db
+      .prepare(
+        `INSERT INTO daily_stats (
+          date,
+          watched_seconds,
+          coding_seconds,
+          dafim_completed,
+          videos_touched,
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+          watched_seconds = watched_seconds + excluded.watched_seconds,
+          coding_seconds = coding_seconds + excluded.coding_seconds,
+          dafim_completed = dafim_completed + excluded.dafim_completed,
+          videos_touched = videos_touched + excluded.videos_touched,
+          updated_at = excluded.updated_at`
+      )
+      .run(
+        date,
+        patch.watchedSeconds || 0,
+        patch.codingSeconds || 0,
+        patch.dafimCompleted || 0,
+        patch.videosTouched || 0,
+        updatedAt
+      );
+  }
+
+  getDailyStats(date: string): DailyStatsRecord {
+    const row = this.db
+      .prepare(
+        `SELECT
+          date,
+          watched_seconds AS watchedSeconds,
+          coding_seconds AS codingSeconds,
+          dafim_completed AS dafimCompleted,
+          videos_touched AS videosTouched,
+          updated_at AS updatedAt
+        FROM daily_stats
+        WHERE date = ?`
+      )
+      .get(date) as DailyStatsRecord | undefined;
+
+    return (
+      row || {
+        date,
+        watchedSeconds: 0,
+        codingSeconds: 0,
+        dafimCompleted: 0,
+        videosTouched: 0,
+        updatedAt: nowIso()
+      }
+    );
   }
 
   close(): void {

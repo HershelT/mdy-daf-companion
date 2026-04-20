@@ -62,3 +62,23 @@ test("database upserts playback progress", () => {
   assert.equal(progress?.completed, true);
   database.close();
 });
+
+test("database increments daily stats without raw project data", () => {
+  const database = new AppDatabase(tempPaths());
+  database.migrate();
+  database.incrementDailyStats("2026-04-19", {
+    watchedSeconds: 90,
+    codingSeconds: 120,
+    dafimCompleted: 1,
+    videosTouched: 1
+  });
+  database.incrementDailyStats("2026-04-19", {
+    watchedSeconds: 30,
+    codingSeconds: 60
+  });
+  const stats = database.getDailyStats("2026-04-19");
+  assert.equal(stats.watchedSeconds, 120);
+  assert.equal(stats.codingSeconds, 180);
+  assert.equal(stats.dafimCompleted, 1);
+  database.close();
+});

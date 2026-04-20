@@ -3,6 +3,8 @@ import { once } from "node:events";
 import type { RuntimePaths } from "../core/paths.js";
 import { nowIso } from "../core/time.js";
 import { AppDatabase } from "../storage/database.js";
+import { loadConfig } from "../core/config.js";
+import { civilDateInTimezone } from "../core/time.js";
 import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import type { DaemonActionResult, DaemonStatus, PlaybackState } from "./protocol.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
@@ -20,6 +22,9 @@ interface DaemonMemoryState {
   playbackState: PlaybackState;
   lastAction: string | null;
   currentVideoId: string | null;
+  activeCodingStartedAt: number | null;
+  lastProgressByVideo: Map<string, number>;
+  completedVideos: Set<string>;
 }
 
 async function readBody(request: IncomingMessage): Promise<string> {
@@ -52,11 +57,31 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
   const memory: DaemonMemoryState = {
     playbackState: "idle",
     lastAction: null,
-    currentVideoId: null
+    currentVideoId: null,
+    activeCodingStartedAt: null,
+    lastProgressByVideo: new Map(),
+    completedVideos: new Set()
   };
 
   const database = new AppDatabase(paths);
   database.migrate();
+  const config = loadConfig(paths);
+  const today = () => civilDateInTimezone(new Date(), config.timezone);
+
+  function markCodingActive(): void {
+    memory.activeCodingStartedAt ??= Date.now();
+  }
+
+  function flushCodingSeconds(): void {
+    if (!memory.activeCodingStartedAt) {
+      return;
+    }
+    const codingSeconds = Math.max(0, (Date.now() - memory.activeCodingStartedAt) / 1000);
+    memory.activeCodingStartedAt = null;
+    if (codingSeconds > 0) {
+      database.incrementDailyStats(today(), { codingSeconds });
+    }
+  }
 
   const server = http.createServer(async (request, response) => {
     try {
@@ -109,9 +134,15 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
         database.insertHookEvent(record);
         memory.lastAction = record.actionTaken;
         if (record.actionTaken?.startsWith("pause")) {
+          flushCodingSeconds();
           memory.playbackState = "paused";
         } else if (record.actionTaken === "resume") {
+          markCodingActive();
           memory.playbackState = "playing";
+        } else if (record.actionTaken === "prepare") {
+          markCodingActive();
+        } else if (record.actionTaken === "close") {
+          flushCodingSeconds();
         }
         sendJson(response, 200, {
           ok: true,
@@ -148,6 +179,16 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           ? Math.max(0, Math.min(100, (body.positionSeconds / duration) * 100))
           : 0;
         const timestamp = nowIso();
+        const previousPosition = memory.lastProgressByVideo.get(body.videoId);
+        const watchedDelta =
+          typeof previousPosition === "number"
+            ? Math.max(0, Math.min(60, body.positionSeconds - previousPosition))
+            : 0;
+        const completedNow = completionPercent >= 90 && !memory.completedVideos.has(body.videoId);
+        if (completedNow) {
+          memory.completedVideos.add(body.videoId);
+        }
+        memory.lastProgressByVideo.set(body.videoId, body.positionSeconds);
         database.upsertPlaybackProgress({
           videoId: body.videoId,
           positionSeconds: body.positionSeconds,
@@ -157,6 +198,11 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           lastWatchedAt: timestamp,
           updatedAt: timestamp
         });
+        database.incrementDailyStats(today(), {
+          watchedSeconds: watchedDelta,
+          dafimCompleted: completedNow ? 1 : 0,
+          videosTouched: watchedDelta > 0 ? 1 : 0
+        });
         sendJson(response, 200, { ok: true, completionPercent });
         return;
       }
@@ -165,6 +211,11 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
         const action = url.pathname.slice(1);
         memory.lastAction = action;
         memory.playbackState = action === "pause" || action === "stop" ? "paused" : "playing";
+        if (memory.playbackState === "playing") {
+          markCodingActive();
+        } else {
+          flushCodingSeconds();
+        }
         const result: DaemonActionResult = {
           ok: true,
           action,

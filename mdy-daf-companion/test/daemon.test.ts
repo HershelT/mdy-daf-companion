@@ -7,6 +7,7 @@ import type { RuntimePaths } from "../src/core/paths.js";
 import { sendDaemonAction, sendHookToDaemon } from "../src/daemon/client.js";
 import { startDaemonServer } from "../src/daemon/server.js";
 import { AppDatabase } from "../src/storage/database.js";
+import { civilDateInTimezone } from "../src/core/time.js";
 
 function tempPaths(): RuntimePaths {
   const dataRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdy-daemon-test-"));
@@ -108,3 +109,68 @@ test("daemon records player progress", async () => {
   database.close();
 });
 
+test("daemon aggregates watched seconds from forward progress", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    for (const positionSeconds of [10, 25]) {
+      const response = await fetch(`http://127.0.0.1:${daemon.port}/api/progress`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${daemon.token}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          videoId: "video-2",
+          positionSeconds,
+          durationSeconds: 100
+        })
+      });
+      assert.equal(response.status, 200);
+    }
+  } finally {
+    await daemon.close();
+  }
+
+  const database = new AppDatabase(paths);
+  database.migrate();
+  const today = civilDateInTimezone(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+  );
+  assert.equal(database.getDailyStats(today).watchedSeconds, 15);
+  database.close();
+});
+
+test("daemon counts completed daf once per video", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    for (const positionSeconds of [91, 95]) {
+      const response = await fetch(`http://127.0.0.1:${daemon.port}/api/progress`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${daemon.token}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          videoId: "video-complete",
+          positionSeconds,
+          durationSeconds: 100
+        })
+      });
+      assert.equal(response.status, 200);
+    }
+  } finally {
+    await daemon.close();
+  }
+
+  const database = new AppDatabase(paths);
+  database.migrate();
+  const today = civilDateInTimezone(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+  );
+  assert.equal(database.getDailyStats(today).dafimCompleted, 1);
+  database.close();
+});
