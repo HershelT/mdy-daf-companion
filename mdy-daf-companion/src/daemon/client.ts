@@ -47,6 +47,15 @@ export async function sendDaemonAction(paths: RuntimePaths, action: string): Pro
   return daemonFetch(state, `/${action}`, { method: "POST" });
 }
 
+export async function resolveCurrentShiur(paths: RuntimePaths, date?: string): Promise<unknown> {
+  const state = readDaemonState(paths);
+  if (!state) {
+    throw new DaemonUnavailableError();
+  }
+  const query = date ? `?date=${encodeURIComponent(date)}` : "";
+  return daemonFetch(state, `/api/resolve${query}`, { method: "POST" });
+}
+
 export async function getPlayerUrl(paths: RuntimePaths): Promise<string> {
   const state = readDaemonState(paths);
   if (!state) {

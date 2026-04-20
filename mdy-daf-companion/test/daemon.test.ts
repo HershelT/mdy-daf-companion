@@ -109,6 +109,57 @@ test("daemon records player progress", async () => {
   database.close();
 });
 
+test("daemon stores current video and renders resume position in player", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const setVideo = await fetch(`http://127.0.0.1:${daemon.port}/api/video`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${daemon.token}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ videoId: "video-1" })
+    });
+    assert.equal(setVideo.status, 200);
+
+    const database = new AppDatabase(paths);
+    database.migrate();
+    database.upsertVideo({
+      id: "video-1",
+      videoId: "video-1",
+      source: "test",
+      sourceUrl: "https://www.youtube.com/watch?v=video-1",
+      title: "Daf Yomi Menachos Daf 98",
+      language: "english",
+      format: "full",
+      masechta: "Menachos",
+      daf: 98,
+      durationSeconds: 100,
+      publishedAt: null,
+      confidence: 1,
+      rawMetadataJson: null
+    });
+    database.upsertPlaybackProgress({
+      videoId: "video-1",
+      positionSeconds: 42,
+      durationSeconds: 100,
+      completed: false,
+      completionPercent: 42,
+      lastWatchedAt: "2026-04-20T00:00:00.000Z",
+      updatedAt: "2026-04-20T00:00:00.000Z"
+    });
+    database.close();
+
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/player?token=${daemon.token}`);
+    const html = await response.text();
+    assert.match(html, /Daf Yomi Menachos Daf 98/);
+    assert.match(html, /initialPositionSeconds: 42/);
+  } finally {
+    await daemon.close();
+  }
+});
+
 test("daemon aggregates watched seconds from forward progress", async () => {
   const paths = tempPaths();
   const daemon = await startDaemonServer(paths);

@@ -34,6 +34,24 @@ export interface DailyStatsRecord {
   updatedAt: string;
 }
 
+export interface StoredVideoRecord {
+  id: string;
+  videoId: string;
+  source: string;
+  sourceUrl: string;
+  title: string;
+  language: string;
+  format: string;
+  masechta: string | null;
+  daf: number | null;
+  durationSeconds: number | null;
+  publishedAt: string | null;
+  confidence: number;
+  rawMetadataJson: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class AppDatabase {
   private db: DatabaseSync;
 
@@ -242,6 +260,105 @@ export class AppDatabase {
         updatedAt: nowIso()
       }
     );
+  }
+
+  setSetting(key: string, value: unknown, updatedAt = nowIso()): void {
+    this.db
+      .prepare(
+        `INSERT INTO settings (key, value_json, updated_at)
+        VALUES (?, ?, ?)
+        ON CONFLICT(key) DO UPDATE SET
+          value_json = excluded.value_json,
+          updated_at = excluded.updated_at`
+      )
+      .run(key, JSON.stringify(value), updatedAt);
+  }
+
+  getSetting<T>(key: string): T | null {
+    const row = this.db
+      .prepare("SELECT value_json AS valueJson FROM settings WHERE key = ?")
+      .get(key) as { valueJson: string } | undefined;
+    return row ? (JSON.parse(row.valueJson) as T) : null;
+  }
+
+  upsertVideo(record: Omit<StoredVideoRecord, "createdAt" | "updatedAt">, timestamp = nowIso()): void {
+    this.db
+      .prepare(
+        `INSERT INTO videos (
+          id,
+          video_id,
+          source,
+          source_url,
+          title,
+          language,
+          format,
+          masechta,
+          daf,
+          duration_seconds,
+          published_at,
+          confidence,
+          raw_metadata_json,
+          created_at,
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          video_id = excluded.video_id,
+          source = excluded.source,
+          source_url = excluded.source_url,
+          title = excluded.title,
+          language = excluded.language,
+          format = excluded.format,
+          masechta = excluded.masechta,
+          daf = excluded.daf,
+          duration_seconds = excluded.duration_seconds,
+          published_at = excluded.published_at,
+          confidence = excluded.confidence,
+          raw_metadata_json = excluded.raw_metadata_json,
+          updated_at = excluded.updated_at`
+      )
+      .run(
+        record.id,
+        record.videoId,
+        record.source,
+        record.sourceUrl,
+        record.title,
+        record.language,
+        record.format,
+        record.masechta,
+        record.daf,
+        record.durationSeconds,
+        record.publishedAt,
+        record.confidence,
+        record.rawMetadataJson,
+        timestamp,
+        timestamp
+      );
+  }
+
+  getVideo(id: string): StoredVideoRecord | null {
+    const row = this.db
+      .prepare(
+        `SELECT
+          id,
+          video_id AS videoId,
+          source,
+          source_url AS sourceUrl,
+          title,
+          language,
+          format,
+          masechta,
+          daf,
+          duration_seconds AS durationSeconds,
+          published_at AS publishedAt,
+          confidence,
+          raw_metadata_json AS rawMetadataJson,
+          created_at AS createdAt,
+          updated_at AS updatedAt
+        FROM videos
+        WHERE id = ?`
+      )
+      .get(id) as StoredVideoRecord | undefined;
+    return row || null;
   }
 
   close(): void {

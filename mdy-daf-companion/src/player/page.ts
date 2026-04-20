@@ -3,13 +3,21 @@ import type { PlaybackState } from "../daemon/protocol.js";
 export interface PlayerPageOptions {
   token: string;
   videoId: string | null;
+  title?: string | null;
+  sourceUrl?: string | null;
+  initialPositionSeconds?: number;
+  completionPercent?: number;
   playbackState: PlaybackState;
 }
 
 export function renderPlayerPage(options: PlayerPageOptions): string {
   const videoId = escapeHtml(options.videoId || "");
+  const title = escapeHtml(options.title || "MDY Daf Companion");
+  const sourceUrl = escapeHtml(options.sourceUrl || "");
   const token = escapeHtml(options.token);
   const playbackState = escapeHtml(options.playbackState);
+  const initialPositionSeconds = Math.max(0, options.initialPositionSeconds || 0);
+  const completionPercent = Math.max(0, Math.min(100, options.completionPercent || 0));
 
   return `<!doctype html>
 <html lang="en">
@@ -94,20 +102,25 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
 <body>
   <main>
     <header>
-      <h1>MDY Daf Companion</h1>
+      <h1>${title}</h1>
       <span id="state">${playbackState}</span>
     </header>
     <section id="player" aria-label="YouTube shiur player"></section>
     <footer>
       <button id="play" title="Play" aria-label="Play">▶</button>
       <button id="pause" title="Pause" aria-label="Pause">Ⅱ</button>
-      <progress id="progress" value="0" max="100" aria-label="Watch progress"></progress>
+      <button id="back" title="Back 30 seconds" aria-label="Back 30 seconds">-30</button>
+      <button id="forward" title="Forward 30 seconds" aria-label="Forward 30 seconds">+30</button>
+      <button id="watched" title="Mark watched" aria-label="Mark watched">✓</button>
+      <progress id="progress" value="${completionPercent}" max="100" aria-label="Watch progress"></progress>
+      ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" rel="noreferrer">YouTube</a>` : ""}
     </footer>
   </main>
   <script>
     const MDY_DAF = {
       token: "${token}",
       videoId: "${videoId}",
+      initialPositionSeconds: ${initialPositionSeconds},
       player: null,
       lastSent: 0
     };
@@ -121,6 +134,12 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
         playerVars: { rel: 0, modestbranding: 1 },
         events: {
           onStateChange: () => sendProgress()
+          ,
+          onReady: () => {
+            if (MDY_DAF.initialPositionSeconds > 0) {
+              MDY_DAF.player.seekTo(MDY_DAF.initialPositionSeconds, true);
+            }
+          }
         }
       });
     }
@@ -158,6 +177,33 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       sendProgress(true);
       fetch("/pause", { method: "POST", headers: { authorization: "Bearer " + MDY_DAF.token } }).catch(() => {});
     });
+    document.getElementById("back").addEventListener("click", () => {
+      if (!MDY_DAF.player) return;
+      MDY_DAF.player.seekTo(Math.max(0, (MDY_DAF.player.getCurrentTime() || 0) - 30), true);
+      sendProgress(true);
+    });
+    document.getElementById("forward").addEventListener("click", () => {
+      if (!MDY_DAF.player) return;
+      MDY_DAF.player.seekTo((MDY_DAF.player.getCurrentTime() || 0) + 30, true);
+      sendProgress(true);
+    });
+    document.getElementById("watched").addEventListener("click", async () => {
+      if (!MDY_DAF.player) return;
+      const durationSeconds = MDY_DAF.player.getDuration() || 0;
+      await fetch("/api/progress", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "authorization": "Bearer " + MDY_DAF.token
+        },
+        body: JSON.stringify({
+          videoId: MDY_DAF.videoId,
+          positionSeconds: durationSeconds,
+          durationSeconds
+        })
+      }).catch(() => {});
+      document.getElementById("progress").value = 100;
+    });
     window.setInterval(() => sendProgress(false), 5000);
     window.addEventListener("beforeunload", () => sendProgress(true));
   </script>
@@ -173,4 +219,3 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-

@@ -2,7 +2,7 @@
 import { ingestHookEvent } from "./hooks/ingest.js";
 import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
-import { getPlayerUrl, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { getPlayerUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { openUrl } from "./player/launcher.js";
@@ -85,6 +85,13 @@ async function main(): Promise<void> {
       process.stdout.write(
         `${resolved.daf.date}: ${resolved.daf.masechta} ${resolved.daf.daf} -> ${resolved.video.title} (${resolved.video.url}) confidence ${resolved.confidence}\n`
       );
+      return;
+    }
+    case "prepare": {
+      await startDaemonProcess(resolveRuntimePaths());
+      const date = process.argv.includes("--date") ? argValue("--date", "") : undefined;
+      const result = await resolveCurrentShiur(resolveRuntimePaths(), date);
+      process.stdout.write(`${JSON.stringify(result)}\n`);
       return;
     }
     case "player-url": {

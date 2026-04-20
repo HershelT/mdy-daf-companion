@@ -6,6 +6,10 @@ test("player page contains YouTube iframe API and local progress endpoint", () =
   const html = renderPlayerPage({
     token: "test-token",
     videoId: "2qz8rC9Yh_k",
+    title: "Daf Yomi Menachos Daf 98",
+    sourceUrl: "https://www.youtube.com/watch?v=2qz8rC9Yh_k",
+    initialPositionSeconds: 120,
+    completionPercent: 25,
     playbackState: "paused"
   });
 
@@ -13,6 +17,9 @@ test("player page contains YouTube iframe API and local progress endpoint", () =
   assert.match(html, /2qz8rC9Yh_k/);
   assert.match(html, /\/api\/progress/);
   assert.match(html, /authorization/);
+  assert.match(html, /seekTo\(MDY_DAF.initialPositionSeconds/);
+  assert.match(html, /Mark watched/);
+  assert.match(html, /YouTube/);
 });
 
 test("player page escapes injected video id", () => {
@@ -25,4 +32,3 @@ test("player page escapes injected video id", () => {
   assert.doesNotMatch(html, /"><script>/);
   assert.match(html, /&lt;script&gt;/);
 });
-

@@ -9,6 +9,10 @@ import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import type { DaemonActionResult, DaemonStatus, PlaybackState } from "./protocol.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
 import { renderPlayerPage } from "../player/page.js";
+import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
+import { chooseBestCandidate } from "../resolver/scoring.js";
+import { YouTubeChannelPageCandidateProvider } from "../resolver/youtubeChannelPage.js";
+import { storeResolvedShiur, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
 
 export interface DaemonServerHandle {
   server: http.Server;
@@ -68,6 +72,39 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
   const config = loadConfig(paths);
   const today = () => civilDateInTimezone(new Date(), config.timezone);
 
+  async function resolveAndStoreShiur(date = today()): Promise<string> {
+    const daf = await new HebcalDafCalendar().getDafForDate(date);
+    const candidates = await new YouTubeChannelPageCandidateProvider().getCandidates(daf);
+    const resolved = chooseBestCandidate(daf, candidates, {
+      language: config.language,
+      format: config.format
+    });
+    storeResolvedShiur(database, resolved);
+    memory.currentVideoId = resolved.video.videoId;
+    return resolved.video.videoId;
+  }
+
+  function currentShiurStatus() {
+    const currentVideoId = memory.currentVideoId || database.getSetting<string>(CURRENT_SHIUR_SETTING);
+    if (!currentVideoId) {
+      return null;
+    }
+    const video = database.getVideo(currentVideoId);
+    if (!video) {
+      return null;
+    }
+    const progress = database.getPlaybackProgress(currentVideoId);
+    return {
+      videoId: video.videoId,
+      title: video.title,
+      sourceUrl: video.sourceUrl,
+      masechta: video.masechta,
+      daf: video.daf,
+      positionSeconds: progress?.positionSeconds || 0,
+      completionPercent: progress?.completionPercent || 0
+    };
+  }
+
   function markCodingActive(): void {
     memory.activeCodingStartedAt ??= Date.now();
   }
@@ -107,6 +144,10 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           renderPlayerPage({
             token,
             videoId: memory.currentVideoId,
+            title: currentShiurStatus()?.title,
+            sourceUrl: currentShiurStatus()?.sourceUrl,
+            initialPositionSeconds: currentShiurStatus()?.positionSeconds,
+            completionPercent: currentShiurStatus()?.completionPercent,
             playbackState: memory.playbackState
           })
         );
@@ -120,7 +161,8 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           startedAt,
           playbackState: memory.playbackState,
           lastAction: memory.lastAction,
-          hookEvents: database.getHookEventCount()
+          hookEvents: database.getHookEventCount(),
+          currentShiur: currentShiurStatus()
         };
         sendJson(response, 200, status);
         return;
@@ -141,6 +183,7 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           memory.playbackState = "playing";
         } else if (record.actionTaken === "prepare") {
           markCodingActive();
+          void resolveAndStoreShiur().catch(() => {});
         } else if (record.actionTaken === "close") {
           flushCodingSeconds();
         }
@@ -149,6 +192,17 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           eventName: record.eventName,
           actionTaken: record.actionTaken,
           parseError: error
+        });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/resolve") {
+        const date = url.searchParams.get("date") || today();
+        const videoId = await resolveAndStoreShiur(date);
+        sendJson(response, 200, {
+          ok: true,
+          currentShiur: currentShiurStatus(),
+          videoId
         });
         return;
       }

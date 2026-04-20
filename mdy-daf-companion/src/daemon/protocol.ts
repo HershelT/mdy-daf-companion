@@ -5,6 +5,7 @@ export interface DaemonStatus {
   playbackState: PlaybackState;
   lastAction: string | null;
   hookEvents: number;
+  currentShiur: CurrentShiurStatus | null;
 }
 
 export type PlaybackState = "idle" | "playing" | "paused" | "blocked";
@@ -15,10 +16,19 @@ export interface DaemonActionResult {
   playbackState: PlaybackState;
 }
 
+export interface CurrentShiurStatus {
+  videoId: string;
+  title: string;
+  sourceUrl: string;
+  masechta: string | null;
+  daf: number | null;
+  positionSeconds: number;
+  completionPercent: number;
+}
+
 export interface DaemonError {
   ok: false;
   error: string;
 }
 
 export type DaemonResponse = DaemonStatus | DaemonActionResult | DaemonError;
-

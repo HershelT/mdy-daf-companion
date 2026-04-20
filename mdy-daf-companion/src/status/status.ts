@@ -45,8 +45,12 @@ export async function getLiveStatusText(): Promise<string> {
       playbackState?: string;
       hookEvents?: number;
       lastAction?: string | null;
+      currentShiur?: { title?: string; completionPercent?: number } | null;
     };
-    return `MDY Daf Companion daemon ${status.playbackState || "ready"}; ${status.hookEvents || 0} hook event(s); last action ${status.lastAction || "none"}.`;
+    const shiur = status.currentShiur?.title
+      ? ` ${status.currentShiur.title} ${Math.round(status.currentShiur.completionPercent || 0)}%.`
+      : "";
+    return `MDY Daf Companion daemon ${status.playbackState || "ready"}; ${status.hookEvents || 0} hook event(s); last action ${status.lastAction || "none"}.${shiur}`;
   } catch {
     return formatStatus(getStatusSummary());
   }
