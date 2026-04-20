@@ -1,120 +1,95 @@
 # Implementation Roadmap
 
-This roadmap is intentionally more complete than an MVP. It still sequences work so each phase leaves the project healthier and testable.
+This roadmap tracks the full product build, not a minimal MVP.
 
 ## Phase 1: Foundations
 
-- Validate current Claude Code plugin schema with `claude plugin validate`.
-- Set up TypeScript project inside `mdy-daf-companion`.
-- Create cross-platform `mdy-daf` CLI.
-- Implement config loader and plugin data paths.
-- Implement SQLite migrations.
-- Implement hook dispatcher that records events and exits fast.
-- Add unit tests for config, time, and hook parsing.
+- Completed: Validate current Claude Code plugin schema with `claude plugin validate`.
+- Completed: Set up TypeScript project inside `mdy-daf-companion`.
+- Completed: Create cross-platform `mdy-daf` CLI.
+- Completed: Implement config loader and plugin data paths.
+- Completed: Implement SQLite migrations.
+- Completed: Implement hook dispatcher that records events and exits fast.
+- Completed: Add unit tests for config, time, and hook parsing.
 
-Exit criteria:
-
-- Plugin validates.
-- Hooks can be invoked with sample JSON.
-- Events persist locally without starting playback.
+Exit status: complete.
 
 ## Phase 2: Daemon And IPC
 
-- Implement daemon process and lockfile.
-- Add local HTTP or IPC API with auth token.
-- Add `start-daemon`, `health`, `status`, `pause`, `resume`.
-- Make hooks start daemon idempotently.
-- Add crash recovery and logs.
+- Completed: Implement daemon process and state file.
+- Completed: Add local HTTP API with auth token.
+- Completed: Add `start-daemon`, `health`, `status`, `pause`, `resume`.
+- Completed: Make hooks start daemon idempotently.
+- Partial: Add crash recovery and logs.
 
-Exit criteria:
-
-- Repeated hooks do not create duplicate daemons.
-- CLI can control daemon.
-- Broken daemon never blocks Claude.
+Exit status: product-capable foundation complete.
 
 ## Phase 3: Resolver
 
-- Implement Daf Yomi calendar adapter.
-- Implement YouTube Data API adapter.
-- Implement MDY app metadata adapter if stable.
-- Implement title parser and confidence scoring.
-- Implement cache.
-- Add resolver CLI and tests with recorded fixtures.
+- Completed: Implement Daf Yomi calendar adapter.
+- Completed: Implement YouTube Data API adapter.
+- Completed: Implement MDY app metadata adapter.
+- Completed: Implement MDY YouTube channel adapter.
+- Completed: Implement title parser and confidence scoring.
+- Completed: Implement source cache.
+- Completed: Add resolver CLI and tests with fixtures.
 
-Exit criteria:
-
-- Resolver returns correct current video for known dates.
-- It can distinguish full Daf, chazarah, English, and Hebrew.
-- It has a clear fallback when unsure.
+Exit status: complete, with the caveat that YouTube/MDY source surfaces can change and should be monitored.
 
 ## Phase 4: Player
 
-- Build local player page.
-- Embed YouTube IFrame API.
-- Implement play, pause, seek, progress events.
-- Persist position.
-- Add window launch/reuse strategy.
-- Add manual controls.
+- Completed: Build local player page.
+- Completed: Embed YouTube IFrame API.
+- Completed: Implement play, pause, seek, progress events.
+- Completed: Persist position.
+- Completed: Add window launch strategy.
+- Completed: Add manual controls.
+- Completed: Add mark-watched and YouTube source link.
 
-Exit criteria:
-
-- Video opens and can be controlled by daemon.
-- Progress survives player close and Claude restart.
+Exit status: complete enough for beta.
 
 ## Phase 5: Lifecycle Automation
 
-- Map Claude events to playback states.
-- Tune pause/resume policy.
-- Implement idle and permission prompt behavior.
-- Add Shabbos/Yom Tov guard.
-- Add status line formatter.
+- Completed: Map Claude events to playback states.
+- Completed: Tune pause/resume policy.
+- Completed: Implement idle and permission prompt behavior.
+- Completed: Add Shabbos guard.
+- Completed: Add Hebcal Yom Tov guard adapter.
+- Completed: Add status line formatter.
 
-Exit criteria:
-
-- Real Claude Code session plays while working and pauses when waiting.
-- Guard prevents configured auto-start.
-- Status line stays current.
+Exit status: beta-ready; full Yom Tov daemon blocking should be deepened after beta.
 
 ## Phase 6: Stats
 
-- Implement watch segments.
-- Implement coding session segments.
-- Materialize daily stats.
-- Add stats commands.
-- Add dashboard stats.
-- Add catch-up queue.
+- Partial: Implement watch segments.
+- Partial: Implement coding session segments.
+- Completed: Materialize daily stats.
+- Completed: Add stats commands.
+- Completed: Add dashboard stats.
+- Pending: Add full catch-up queue.
 
-Exit criteria:
-
-- User can see today/week/cycle stats.
-- Stats are accurate across pause/resume and restarts.
+Exit status: useful local stats implemented; catch-up planning remains a product enhancement.
 
 ## Phase 7: Product Polish
 
-- First-run setup.
-- Settings UI or guided command.
-- Design pass for player and dashboard.
-- Error states and `doctor` command.
-- README, privacy policy, marketplace listing.
-- Optional supporter tier messaging.
+- Completed: First-run setup.
+- Completed: Settings guided command.
+- Completed: Design pass for player and dashboard.
+- Completed: Error states and `doctor` command.
+- Completed: README, privacy policy, marketplace listing draft.
+- Completed: Optional supporter tier messaging in release docs.
 
-Exit criteria:
-
-- New user can install, configure, and succeed without reading internal specs.
-- Public release assets are ready.
+Exit status: beta-ready.
 
 ## Phase 8: Release
 
-- Cross-platform packaging.
-- Marketplace metadata.
-- Versioning and changelog.
-- Beta testing with real Claude Code users.
-- Legal/brand review.
-- Optional MDY partnership outreach.
+- Completed: Cross-platform packaging wrappers.
+- Completed: Plugin user configuration.
+- Partial: Marketplace metadata.
+- Completed: Versioning and changelog.
+- Pending: Beta testing with real Claude Code users.
+- Pending: Legal/brand review.
+- Pending: Optional MDY partnership outreach.
 
-Exit criteria:
-
-- Stable public release candidate.
-- Clear free/supporter model.
-- No unresolved privacy or licensing concerns.
+Exit status: local beta release candidate.
 

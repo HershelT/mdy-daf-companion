@@ -26,6 +26,7 @@ Included:
 - `docs/product-spec.md`
 - `docs/technical-architecture.md`
 - `docs/implementation-roadmap.md`
+- `docs/progress-ledger.md`
 - `docs/release-and-marketing.md`
 - `docs/install-and-compatibility.md`
 - `docs/research/mdy-domain-research.md`
@@ -66,11 +67,13 @@ npm test
 npm run validate:plugin
 node dist/src/cli.js doctor
 node dist/src/cli.js today --date 2026-04-20
-node dist/src/cli.js start-daemon
-node dist/src/cli.js player-url
+node dist/src/cli.js setup --language english --format full --timezone America/Chicago
+node dist/src/cli.js prepare
+node dist/src/cli.js open-player
+node dist/src/cli.js open-dashboard
 ```
 
-The remaining work is to connect live MDY/YouTube candidate discovery, launch the player window automatically, and package cross-platform release wrappers.
+The remaining work is real-world beta validation across Claude Desktop, VS Code, macOS, Linux, SSH/dev containers, and brand/legal review before public marketing.
 
 Compatibility research is in `docs/research/claude-code-surface-compatibility.md`. Short version: local CLI, local Desktop, and likely local VS Code are the main supported targets; Desktop remote/cloud sessions do not support plugins; SSH/dev-container sessions need remote-safe playback handling.
 

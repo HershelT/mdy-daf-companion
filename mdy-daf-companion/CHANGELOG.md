@@ -16,4 +16,10 @@
 - Added daily watched/coding stats.
 - Added doctor checks.
 - Added cross-platform player launcher.
-
+- Added first-run setup command.
+- Added Shabbos guard and Hebcal Yom Tov guard adapter.
+- Added multi-source resolver providers and SQLite cache.
+- Added local stats dashboard.
+- Added cross-platform CLI wrappers.
+- Added Claude plugin user configuration.
+- Added smoke checks and install/compatibility documentation.
