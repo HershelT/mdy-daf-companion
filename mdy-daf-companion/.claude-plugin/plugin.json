@@ -1,0 +1,19 @@
+{
+  "name": "mdy-daf-companion",
+  "description": "Play the latest MDY Daf Yomi shiur during Claude Code sessions, with automatic pause/resume, saved progress, and local stats.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Project contributors"
+  },
+  "license": "MIT",
+  "homepage": "https://mdydaf.com",
+  "repository": "",
+  "keywords": [
+    "claude-code",
+    "daf-yomi",
+    "mercaz-daf-yomi",
+    "youtube",
+    "productivity"
+  ]
+}
+
