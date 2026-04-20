@@ -1,0 +1,26 @@
+{
+  "name": "mdy-daf-companion",
+  "owner": {
+    "name": "MDY Daf Companion contributors"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for Daf Yomi learners.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mdy-daf-companion",
+      "source": "./mdy-daf-companion",
+      "description": "Play the latest Rabbi Eli Stefansky / MDY Daf Yomi shiur while Claude Code works.",
+      "category": "productivity",
+      "tags": [
+        "daf-yomi",
+        "claude-code",
+        "youtube",
+        "learning",
+        "stats"
+      ]
+    }
+  ]
+}
+

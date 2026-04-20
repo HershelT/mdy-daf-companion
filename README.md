@@ -1,83 +1,217 @@
-# MDY Daf Companion For Claude Code
+# MDY Daf Companion
 
-This repository contains the product specification and initial Claude Code plugin scaffold for MDY Daf Companion.
+MDY Daf Companion is a Claude Code plugin for developers who learn Daf Yomi. It resolves the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur, opens a local YouTube player while Claude Code works, pauses when Claude waits for you, saves your place, and tracks local learning/coding stats.
 
-The goal is to build a polished plugin that plays the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur while Claude Code is working, pauses when Claude Code stops or waits for the user, saves video progress, and tracks local learning and coding stats.
+The plugin is local-first: playback uses the YouTube IFrame API, state is stored on your machine, and no prompt text, source code, transcript content, or raw tool input is stored by default.
 
-## Current State
+> Independent project. Not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
 
-This is now an implemented foundation plus product/spec package. The runtime can ingest Claude Code hook events, start a local daemon, expose an authenticated local API, serve a YouTube IFrame player shell, persist playback progress, resolve Daf Yomi calendar data, and report local stats.
+## Features
 
-Included:
+- Resolves the current Daf Yomi through Hebcal.
+- Finds MDY shiur candidates from layered sources:
+  - MDY app page extraction.
+  - Optional YouTube Data API.
+  - Public MDY YouTube channel page fallback.
+- Scores candidates by masechta, daf, language, format, duration, source, and exclusion rules.
+- Plays through an authenticated local player page using the YouTube IFrame API.
+- Automatically maps Claude lifecycle hooks to play/pause/prepare behavior.
+- Saves playback progress and resumes from the last position.
+- Tracks watched minutes, coding minutes, completion counts, and watch/coding ratio.
+- Provides a local stats dashboard.
+- Includes Shabbos guard and a Hebcal Yom Tov guard adapter.
+- Supports Claude Code CLI local sessions, Claude Desktop local sessions, and local VS Code extension sessions.
 
-- Full product spec.
-- Claude Code architecture research.
-- MDY domain research.
-- Technical architecture.
-- Data model.
-- Testing strategy.
-- Release and marketing plan.
-- Claude Code plugin structure under `mdy-daf-companion/`.
-- Tested TypeScript runtime with CLI, hooks, daemon, resolver, player shell, stats, and doctor checks.
+## Requirements
 
-## Key Docs
+- Claude Code with plugin support.
+- Node.js 24 or newer.
+- Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
+- A local Claude Code session for automatic player control.
 
-- `AGENTS.md`
-- `docs/product-spec.md`
-- `docs/technical-architecture.md`
-- `docs/implementation-roadmap.md`
-- `docs/progress-ledger.md`
-- `docs/release-and-marketing.md`
-- `docs/install-and-compatibility.md`
-- `docs/research/mdy-domain-research.md`
-- `docs/research/claude-code-april-2026.md`
+Remote/cloud Claude sessions are not supported for local playback. The plugin detects `CLAUDE_CODE_REMOTE=true` and disables daemon startup in that environment.
 
-## Plugin Scaffold
+## Install
 
-Plugin root:
+### Option 1: Local Marketplace Install
 
-```text
-mdy-daf-companion/
-  .claude-plugin/plugin.json
-  hooks/hooks.json
-  commands/
-  skills/
-  agents/
-  scripts/
-  bin/
+From this repository root:
+
+```bash
+claude plugin validate .
+claude plugin marketplace add . --scope local
+claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
 ```
 
-Development test target:
+Then start or reload Claude Code:
+
+```text
+/reload-plugins
+```
+
+### Option 2: Development Session
+
+Use this when actively editing the plugin:
 
 ```bash
 claude --plugin-dir ./mdy-daf-companion
 ```
 
-Then validate with:
+Claude Code gives local `--plugin-dir` plugins priority for that session.
 
-```bash
-claude plugin validate ./mdy-daf-companion
+## First Run
+
+Inside Claude Code, run:
+
+```text
+/mdy-daf-companion:setup
 ```
 
-Useful runtime commands from `mdy-daf-companion/`:
+For direct CLI setup:
 
 ```bash
-npm install
-npm test
-npm run validate:plugin
+mdy-daf setup --language english --format full --timezone America/Chicago --guard true --auto-open true
+```
+
+Prepare today’s shiur:
+
+```text
+/mdy-daf-companion:prepare
+```
+
+Open the player:
+
+```text
+/mdy-daf-companion:play
+```
+
+Open the dashboard:
+
+```text
+/mdy-daf-companion:dashboard
+```
+
+Check health:
+
+```text
+/mdy-daf-companion:status
+```
+
+## Direct CLI Commands
+
+When the plugin is enabled, its `bin/` directory is added to Claude Code’s plugin PATH. The runtime command is:
+
+```bash
+mdy-daf doctor
+mdy-daf setup --language english --format full --timezone America/Chicago
+mdy-daf today --date 2026-04-20
+mdy-daf resolve --date 2026-04-19
+mdy-daf prepare
+mdy-daf open-player
+mdy-daf open-dashboard
+mdy-daf stats
+```
+
+For local repository testing without installing:
+
+```bash
+cd mdy-daf-companion
+npm run check
 node dist/src/cli.js doctor
-node dist/src/cli.js today --date 2026-04-20
-node dist/src/cli.js setup --language english --format full --timezone America/Chicago
 node dist/src/cli.js prepare
-node dist/src/cli.js open-player
 node dist/src/cli.js open-dashboard
 ```
 
-The remaining work is real-world beta validation across Claude Desktop, VS Code, macOS, Linux, SSH/dev containers, and brand/legal review before public marketing.
+## How Video Resolution Works
 
-Compatibility research is in `docs/research/claude-code-surface-compatibility.md`. Short version: local CLI, local Desktop, and likely local VS Code are the main supported targets; Desktop remote/cloud sessions do not support plugins; SSH/dev-container sessions need remote-safe playback handling.
+The resolver does not simply pick the newest upload. That would often choose the wrong video because MDY may upload Hebrew shiurim, chazarah, full Daf, and adjacent dafim close together.
 
+Instead, the plugin:
 
-## Disclaimer
+1. Gets the Daf Yomi for the configured date/timezone from Hebcal.
+2. Collects MDY video candidates from available source adapters.
+3. Parses each candidate title for masechta, daf number, language, and format.
+4. Excludes events, siyumim, promos, shorts, and announcements.
+5. Scores candidates using daf match, masechta match, language preference, format preference, duration, and source confidence.
+6. Stores the selected shiur and player progress locally.
 
-This project is an independent companion concept and is not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
+Verified live example:
+
+```text
+2026-04-19: Menachos 98 -> Daf Yomi Menachos Daf 98 by R' Eli Stefansky
+https://www.youtube.com/watch?v=2qz8rC9Yh_k
+confidence 0.87
+```
+
+## Compatibility
+
+| Surface | Support | Notes |
+| --- | --- | --- |
+| Claude Code CLI local | Supported | Best-tested local path. |
+| Claude Desktop local | Supported target | Plugins are available in local Desktop sessions; validate Node availability. |
+| VS Code extension local | Supported target | Shares Claude Code settings/hook behavior with CLI; validate in your local extension session. |
+| Desktop SSH | Partial | Plugin runs on the SSH host; player may require port forwarding. |
+| VS Code Remote SSH/dev containers | Partial | Same remote-host caveat as SSH. |
+| Desktop remote/cloud | Unsupported | Claude docs say plugins are unavailable for remote Desktop sessions. |
+| Claude Code web/cloud | Unsupported | No local daemon/player surface. |
+
+See [Install And Compatibility](docs/install-and-compatibility.md).
+
+## Development
+
+```bash
+cd mdy-daf-companion
+npm install
+npm run check
+```
+
+`npm run check` runs:
+
+- TypeScript build.
+- Node test suite.
+- Claude plugin validation.
+- Smoke checks.
+
+Current automated coverage includes hook parsing, daemon auth, player rendering, progress persistence, resolver scoring, source adapters, stats, dashboard rendering, setup, guards, and plugin surface detection.
+
+## Documentation
+
+- [Install And Compatibility](docs/install-and-compatibility.md)
+- [Product Spec](docs/product-spec.md)
+- [Technical Architecture](docs/technical-architecture.md)
+- [Implementation Roadmap](docs/implementation-roadmap.md)
+- [Progress Ledger](docs/progress-ledger.md)
+- [Privacy](mdy-daf-companion/PRIVACY.md)
+- [Release And Marketing](docs/release-and-marketing.md)
+- [Claude Code Surface Research](docs/research/claude-code-surface-compatibility.md)
+- [MDY Domain Research](docs/research/mdy-domain-research.md)
+
+## Privacy
+
+By default, MDY Daf Companion stores only local operational data:
+
+- Settings.
+- Resolved shiur metadata.
+- Playback progress.
+- Hook event categories.
+- Daily watched/coding aggregates.
+
+It does not store prompt text, transcript content, source code, file contents, or raw tool inputs by default. See [Privacy](mdy-daf-companion/PRIVACY.md).
+
+## Release Status
+
+This repository is a local beta release candidate. Automated checks pass, the plugin validates, the runtime is bundled, and the local marketplace manifest is present.
+
+Still required before public launch:
+
+- Hands-on Claude Desktop local validation on macOS and Windows.
+- Hands-on VS Code extension local validation.
+- SSH/dev-container port-forwarding validation.
+- macOS and Linux browser-launch smoke tests.
+- Brand/legal review before public marketing.
+- Optional MDY permission or partnership outreach.
+
+## License
+
+MIT. See [LICENSE](mdy-daf-companion/LICENSE).
+

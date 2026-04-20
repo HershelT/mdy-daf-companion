@@ -1,9 +1,13 @@
 node_modules/
 dist/
+!mdy-daf-companion/dist/
+!mdy-daf-companion/dist/src/
+!mdy-daf-companion/dist/src/**
+mdy-daf-companion/dist/test/
 .tmp-plugin-data/
+.smoke-data/
 *.sqlite
 *.sqlite-*
 *.log
 .DS_Store
 Thumbs.db
-

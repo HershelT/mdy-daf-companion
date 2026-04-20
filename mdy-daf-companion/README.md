@@ -1,83 +1,108 @@
-# MDY Daf Companion
+# MDY Daf Companion Plugin
 
-MDY Daf Companion is a Claude Code plugin that plays the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur while Claude Code works, pauses when Claude Code waits for the user, saves progress, and tracks local learning and coding stats.
+MDY Daf Companion is a Claude Code plugin that plays the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur while Claude Code works, pauses when Claude waits for you, saves progress, and tracks local Daf Yomi/coding stats.
 
-This plugin is an independent companion and is not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
+This plugin is independent and is not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
 
-## Current Runtime
+## What It Does
 
-Implemented:
+- Resolves today’s Daf Yomi.
+- Finds the best matching MDY shiur.
+- Opens a local YouTube IFrame player.
+- Pauses when Claude Code stops, asks for permission, idles, or ends the session.
+- Resumes from saved progress.
+- Tracks watched minutes, coding minutes, dafim completed, and watch/coding ratio.
+- Serves a local dashboard.
+- Keeps stats local by default.
 
-- Claude Code plugin manifest and hook config.
-- TypeScript CLI runtime.
-- Local authenticated daemon.
-- Hook ingestion and playback lifecycle actions.
-- Daf Yomi calendar lookup through Hebcal.
-- MDY YouTube channel candidate extraction.
-- Resolver scoring for daf, masechta, language, format, duration, and source.
-- Local YouTube IFrame player shell.
-- Playback progress persistence.
-- Daily watched/coding stats.
-- Doctor checks.
-- Cross-platform player URL launcher.
+## Quick Start
 
-## Install For Development
+After installation, run these inside Claude Code:
+
+```text
+/mdy-daf-companion:setup
+/mdy-daf-companion:prepare
+/mdy-daf-companion:play
+/mdy-daf-companion:dashboard
+/mdy-daf-companion:stats
+```
+
+Equivalent CLI commands:
 
 ```bash
-npm install
-npm run check
-npm run smoke
-claude --plugin-dir .
+mdy-daf setup --language english --format full --timezone America/Chicago --guard true --auto-open true
+mdy-daf prepare
+mdy-daf open-player
+mdy-daf open-dashboard
+mdy-daf stats
+mdy-daf doctor
+```
+
+## Configuration
+
+Claude Code prompts for these plugin options when supported by the installation surface:
+
+- `language`: `english` or `hebrew`.
+- `format`: `full` or `chazarah`.
+- `timezone`: for Daf Yomi date and daily stats.
+- `auto_open_player`: whether Claude work should open the player automatically.
+- `youtube_api_key`: optional, improves YouTube metadata lookup.
+
+You can also configure directly:
+
+```bash
+mdy-daf setup --language english --format full --timezone America/Chicago --guard true --auto-open true
 ```
 
 ## Commands
 
-```bash
-node dist/src/cli.js doctor
-node dist/src/cli.js today --date 2026-04-20
-node dist/src/cli.js resolve --date 2026-04-19
-node dist/src/cli.js start-daemon
-node dist/src/cli.js player-url
-node dist/src/cli.js open-player
-node dist/src/cli.js open-dashboard
-node dist/src/cli.js stats
-```
+| Command | Purpose |
+| --- | --- |
+| `mdy-daf doctor` | Validate runtime, plugin files, data directory, and SQLite. |
+| `mdy-daf setup` | Save language, format, timezone, guard, and autoplay preferences. |
+| `mdy-daf today` | Print the Daf Yomi for a date. |
+| `mdy-daf resolve` | Resolve a date to the best MDY video candidate. |
+| `mdy-daf prepare` | Resolve and store the current shiur for playback. |
+| `mdy-daf open-player` | Start daemon and open the local player. |
+| `mdy-daf open-dashboard` | Start daemon and open the local dashboard. |
+| `mdy-daf stats` | Print today’s local watched/coding stats. |
 
-## Privacy Defaults
+## Runtime Model
 
-- Stats are local-only.
-- Data is stored under the Claude plugin data directory or `~/.mdy-daf-companion` in development.
-- The plugin does not store prompt text, transcript content, source code, or raw tool inputs by default.
-- The local daemon binds to `127.0.0.1` and uses a random bearer token.
+- Hooks forward Claude lifecycle events to a local daemon.
+- The daemon binds to `127.0.0.1` and requires a random bearer token.
+- Persistent data goes under `${CLAUDE_PLUGIN_DATA}`.
+- The player uses the YouTube IFrame API.
+- Video files are never downloaded, mirrored, or redistributed.
 
-See `PRIVACY.md`.
+## Compatibility
 
-## Release Status
-
-This is a strong foundation but not a public stable release yet. Remaining release work:
-
-- Validate plugin user config schema against the exact Claude Code release target.
-- Package cross-platform executable wrappers.
-- Add automatic resolved-video handoff into the player.
-- Add first-run settings flow.
-- Run beta testing on Windows, macOS, and Linux.
-- Complete brand/legal review before using MDY marks in public marketing.
-
-## Claude Code Surface Compatibility
-
-Best-supported targets:
+Supported targets:
 
 - Claude Code CLI local sessions.
-- Claude Code Desktop local sessions.
-- Claude Code VS Code extension local sessions, pending hands-on validation.
+- Claude Desktop local sessions.
+- Claude Code VS Code extension local sessions.
 
 Partial targets:
 
 - Desktop SSH sessions.
 - VS Code Remote SSH/dev containers.
 
-Unsupported target:
+Unsupported:
 
-- Claude Code Desktop remote/cloud sessions, because plugins are not available there.
+- Claude Desktop remote/cloud sessions.
+- Claude Code web/cloud sessions for local playback.
 
-The runtime includes a guard for `CLAUDE_CODE_REMOTE=true` and will not start the local player daemon in Claude remote/cloud environments.
+## Development
+
+```bash
+npm install
+npm run check
+```
+
+`npm run check` builds TypeScript, runs tests, validates the plugin manifest, and runs smoke checks.
+
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md). Default behavior is local-only and does not store prompt text, source code, transcript content, file contents, or raw tool inputs.
+
