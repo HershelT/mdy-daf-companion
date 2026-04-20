@@ -2,7 +2,7 @@
 import { ingestHookEvent } from "./hooks/ingest.js";
 import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
-import { getPlayerUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { getDashboardUrl, getPlayerUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { openUrl } from "./player/launcher.js";
@@ -105,9 +105,21 @@ async function main(): Promise<void> {
       process.stdout.write(`${await getPlayerUrl(resolveRuntimePaths())}\n`);
       return;
     }
+    case "dashboard-url": {
+      await startDaemonProcess(resolveRuntimePaths());
+      process.stdout.write(`${await getDashboardUrl(resolveRuntimePaths())}\n`);
+      return;
+    }
     case "open-player": {
       await startDaemonProcess(resolveRuntimePaths());
       const url = await getPlayerUrl(resolveRuntimePaths());
+      openUrl(url);
+      process.stdout.write(`${url}\n`);
+      return;
+    }
+    case "open-dashboard": {
+      await startDaemonProcess(resolveRuntimePaths());
+      const url = await getDashboardUrl(resolveRuntimePaths());
       openUrl(url);
       process.stdout.write(`${url}\n`);
       return;

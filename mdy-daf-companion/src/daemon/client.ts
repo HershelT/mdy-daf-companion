@@ -64,6 +64,14 @@ export async function getPlayerUrl(paths: RuntimePaths): Promise<string> {
   return `http://${state.host}:${state.port}/player?token=${encodeURIComponent(state.token)}`;
 }
 
+export async function getDashboardUrl(paths: RuntimePaths): Promise<string> {
+  const state = readDaemonState(paths);
+  if (!state) {
+    throw new DaemonUnavailableError();
+  }
+  return `http://${state.host}:${state.port}/dashboard?token=${encodeURIComponent(state.token)}`;
+}
+
 export async function sendHookToDaemon(
   paths: RuntimePaths,
   fallbackEvent: string,

@@ -9,12 +9,14 @@ import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import type { DaemonActionResult, DaemonStatus, PlaybackState } from "./protocol.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
 import { renderPlayerPage } from "../player/page.js";
+import { renderDashboardPage } from "../dashboard/page.js";
 import { openUrl } from "../player/launcher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
 import { chooseBestCandidate } from "../resolver/scoring.js";
 import { createDefaultCandidateProvider } from "../resolver/defaultProvider.js";
 import { storeResolvedShiur, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
 import { shouldBlockAutoPlayback } from "../guard/shabbosGuard.js";
+import { summarizeDailyStats } from "../stats/summary.js";
 
 export interface DaemonServerHandle {
   server: http.Server;
@@ -155,6 +157,33 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
             initialPositionSeconds: currentShiurStatus()?.positionSeconds,
             completionPercent: currentShiurStatus()?.completionPercent,
             playbackState: memory.playbackState
+          })
+        );
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/dashboard") {
+        const date = today();
+        const rows = database.getDailyStatsRange(date, date);
+        const todayStats = summarizeDailyStats(database.getDailyStats(date));
+        const weekStats = summarizeDailyStats({
+          date,
+          watchedSeconds: rows.reduce((sum, row) => sum + row.watchedSeconds, 0),
+          codingSeconds: rows.reduce((sum, row) => sum + row.codingSeconds, 0),
+          dafimCompleted: rows.reduce((sum, row) => sum + row.dafimCompleted, 0),
+          videosTouched: rows.reduce((sum, row) => sum + row.videosTouched, 0),
+          updatedAt: nowIso()
+        });
+        response.writeHead(200, {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store"
+        });
+        response.end(
+          renderDashboardPage({
+            token,
+            playbackState: memory.playbackState,
+            currentShiur: currentShiurStatus(),
+            stats: { today: todayStats, week: weekStats }
           })
         );
         return;

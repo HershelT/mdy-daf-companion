@@ -262,6 +262,23 @@ export class AppDatabase {
     );
   }
 
+  getDailyStatsRange(startDate: string, endDate: string): DailyStatsRecord[] {
+    return this.db
+      .prepare(
+        `SELECT
+          date,
+          watched_seconds AS watchedSeconds,
+          coding_seconds AS codingSeconds,
+          dafim_completed AS dafimCompleted,
+          videos_touched AS videosTouched,
+          updated_at AS updatedAt
+        FROM daily_stats
+        WHERE date >= ? AND date <= ?
+        ORDER BY date ASC`
+      )
+      .all(startDate, endDate) as DailyStatsRecord[];
+  }
+
   setSetting(key: string, value: unknown, updatedAt = nowIso()): void {
     this.db
       .prepare(

@@ -160,6 +160,46 @@ test("daemon stores current video and renders resume position in player", async 
   }
 });
 
+test("daemon serves dashboard with stats and current shiur", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const database = new AppDatabase(paths);
+    database.migrate();
+    database.setSetting("currentShiurVideoId", "video-1");
+    database.upsertVideo({
+      id: "video-1",
+      videoId: "video-1",
+      source: "test",
+      sourceUrl: "https://www.youtube.com/watch?v=video-1",
+      title: "Daf Yomi Menachos Daf 98",
+      language: "english",
+      format: "full",
+      masechta: "Menachos",
+      daf: 98,
+      durationSeconds: 100,
+      publishedAt: null,
+      confidence: 1,
+      rawMetadataJson: null
+    });
+    database.incrementDailyStats(civilDateInTimezone(new Date(), "UTC"), {
+      watchedSeconds: 1800,
+      codingSeconds: 3600,
+      dafimCompleted: 1
+    });
+    database.close();
+
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/dashboard?token=${daemon.token}`);
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /Daf Yomi Menachos Daf 98/);
+    assert.match(html, /Watched Today/);
+  } finally {
+    await daemon.close();
+  }
+});
+
+
 test("daemon aggregates watched seconds from forward progress", async () => {
   const paths = tempPaths();
   const daemon = await startDaemonServer(paths);
