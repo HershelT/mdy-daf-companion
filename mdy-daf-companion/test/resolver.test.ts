@@ -44,6 +44,13 @@ test("parses English full daf title", () => {
   assert.equal(parsed.format, "full");
 });
 
+test("parses live MDY Daf Yomi title pattern", () => {
+  const parsed = parseVideoTitle("Daf Yomi Menachos Daf 98 by R' Eli Stefansky");
+  assert.equal(parsed.masechta, "Menachos");
+  assert.equal(parsed.daf, 98);
+  assert.equal(parsed.format, "full");
+});
+
 test("parses chazarah and Hebrew title hints", () => {
   const parsed = parseVideoTitle("Hebrew Chazarah Menachos Daf 98");
   assert.equal(parsed.language, "hebrew");
@@ -94,4 +101,3 @@ test("chooses matching full English daf over newer Hebrew or chazarah videos", (
   assert.equal(resolved.video.videoId, "full98");
   assert.ok(resolved.confidence >= 0.9);
 });
-

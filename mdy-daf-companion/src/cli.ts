@@ -6,6 +6,8 @@ import { getPlayerUrl, sendDaemonAction, startDaemonProcess } from "./daemon/cli
 import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
+import { chooseBestCandidate } from "./resolver/scoring.js";
+import { YouTubeChannelPageCandidateProvider } from "./resolver/youtubeChannelPage.js";
 import { formatStatsSummary, getTodayStatsSummary } from "./stats/summary.js";
 import { getLiveStatusText } from "./status/status.js";
 
@@ -69,6 +71,19 @@ async function main(): Promise<void> {
       const date = argValue("--date", new Date().toISOString().slice(0, 10));
       const daf = await new HebcalDafCalendar().getDafForDate(date);
       process.stdout.write(`${daf.date}: ${daf.masechta} ${daf.daf}\n`);
+      return;
+    }
+    case "resolve": {
+      const date = argValue("--date", new Date().toISOString().slice(0, 10));
+      const daf = await new HebcalDafCalendar().getDafForDate(date);
+      const candidates = await new YouTubeChannelPageCandidateProvider().getCandidates(daf);
+      const resolved = chooseBestCandidate(daf, candidates, {
+        language: "english",
+        format: "full"
+      });
+      process.stdout.write(
+        `${resolved.daf.date}: ${resolved.daf.masechta} ${resolved.daf.daf} -> ${resolved.video.title} (${resolved.video.url}) confidence ${resolved.confidence}\n`
+      );
       return;
     }
     case "player-url": {

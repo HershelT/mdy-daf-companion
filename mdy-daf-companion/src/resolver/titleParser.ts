@@ -48,6 +48,11 @@ function parseDafNumber(title: string): number | null {
 
 function parseMasechta(title: string): string | null {
   const withoutSeparators = title.replace(/[-|:]/g, " ");
+  const dafYomiMatch = withoutSeparators.match(/\bdaf\s+yomi\s+(.+?)\s+daf\s+\d{1,3}\b/i);
+  if (dafYomiMatch) {
+    return normalizeMasechta(dafYomiMatch[1]);
+  }
+
   const dafMatch = withoutSeparators.match(/([A-Za-z ]+?)\s+(?:daf\s+)?\d{1,3}\b/i);
   if (dafMatch) {
     const cleaned = dafMatch[1]
@@ -79,4 +84,3 @@ function parseFormat(title: string): SupportedFormat | null {
   }
   return null;
 }
-
