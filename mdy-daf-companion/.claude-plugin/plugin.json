@@ -14,6 +14,37 @@
     "mercaz-daf-yomi",
     "youtube",
     "productivity"
-  ]
+  ],
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Shiur language",
+      "description": "Preferred shiur language: english or hebrew.",
+      "sensitive": false
+    },
+    "format": {
+      "type": "string",
+      "title": "Shiur format",
+      "description": "Preferred shiur format: full or chazarah.",
+      "sensitive": false
+    },
+    "timezone": {
+      "type": "string",
+      "title": "Timezone",
+      "description": "Timezone used for Daf Yomi and stats, for example America/Chicago.",
+      "sensitive": false
+    },
+    "auto_open_player": {
+      "type": "boolean",
+      "title": "Auto-open player",
+      "description": "Whether the plugin should open the local player automatically: true or false.",
+      "sensitive": false
+    },
+    "youtube_api_key": {
+      "type": "string",
+      "title": "YouTube API key",
+      "description": "Optional YouTube Data API key for stronger video metadata lookup.",
+      "sensitive": true
+    }
+  }
 }
-

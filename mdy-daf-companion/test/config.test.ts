@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { defaultConfig, loadConfig, saveConfig, validateConfig } from "../src/core/config.js";
+import { defaultConfig, loadConfig, pluginEnvConfig, saveConfig, validateConfig } from "../src/core/config.js";
 import type { RuntimePaths } from "../src/core/paths.js";
 
 function tempPaths(): RuntimePaths {
@@ -40,5 +40,22 @@ test("validateConfig rejects invalid progress flush interval", () => {
   assert.throws(
     () => validateConfig({ ...defaultConfig, progressFlushSeconds: 0 }),
     /progressFlushSeconds/
+  );
+});
+
+test("pluginEnvConfig reads Claude plugin userConfig environment variables", () => {
+  assert.deepEqual(
+    pluginEnvConfig({
+      CLAUDE_PLUGIN_OPTION_language: "hebrew",
+      CLAUDE_PLUGIN_OPTION_format: "chazarah",
+      CLAUDE_PLUGIN_OPTION_timezone: "Asia/Jerusalem",
+      CLAUDE_PLUGIN_OPTION_auto_open_player: "false"
+    }),
+    {
+      language: "hebrew",
+      format: "chazarah",
+      timezone: "Asia/Jerusalem",
+      autoOpenPlayer: false
+    }
   );
 });

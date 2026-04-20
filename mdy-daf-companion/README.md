@@ -26,6 +26,7 @@ Implemented:
 ```bash
 npm install
 npm run check
+npm run smoke
 claude --plugin-dir .
 ```
 
@@ -38,6 +39,7 @@ node dist/src/cli.js resolve --date 2026-04-19
 node dist/src/cli.js start-daemon
 node dist/src/cli.js player-url
 node dist/src/cli.js open-player
+node dist/src/cli.js open-dashboard
 node dist/src/cli.js stats
 ```
 

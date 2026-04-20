@@ -40,6 +40,15 @@ export function runDoctor(): DoctorReport {
   checks.push(
     check("hook-config", fs.existsSync(`${paths.pluginRoot}/hooks/hooks.json`), "Hook config is present")
   );
+  checks.push(
+    check(
+      "cli-wrappers",
+      fs.existsSync(`${paths.pluginRoot}/bin/mdy-daf.mjs`) &&
+        fs.existsSync(`${paths.pluginRoot}/bin/mdy-daf`) &&
+        fs.existsSync(`${paths.pluginRoot}/bin/mdy-daf.cmd`),
+      "Cross-platform CLI wrappers are present"
+    )
+  );
 
   try {
     fs.mkdirSync(paths.dataRoot, { recursive: true });

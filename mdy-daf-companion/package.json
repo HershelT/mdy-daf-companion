@@ -11,8 +11,9 @@
     "build": "tsc -p tsconfig.json",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "smoke": "npm run build && node scripts/smoke.mjs",
     "validate:plugin": "claude plugin validate .",
-    "check": "npm run test && npm run validate:plugin"
+    "check": "npm run test && npm run validate:plugin && npm run smoke"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
@@ -22,4 +23,3 @@
     "node": ">=24.0.0"
   }
 }
-

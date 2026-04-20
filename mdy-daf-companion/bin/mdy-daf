@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -eu
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
+exec node "$PLUGIN_ROOT/dist/src/cli.js" "$@"
+

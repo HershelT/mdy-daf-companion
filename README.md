@@ -27,6 +27,7 @@ Included:
 - `docs/technical-architecture.md`
 - `docs/implementation-roadmap.md`
 - `docs/release-and-marketing.md`
+- `docs/install-and-compatibility.md`
 - `docs/research/mdy-domain-research.md`
 - `docs/research/claude-code-april-2026.md`
 

@@ -38,12 +38,11 @@ export const defaultConfig: AppConfig = {
 };
 
 export function loadConfig(paths: RuntimePaths): AppConfig {
-  if (!fs.existsSync(paths.configPath)) {
-    return defaultConfig;
-  }
+  const fileConfig = fs.existsSync(paths.configPath)
+    ? (JSON.parse(fs.readFileSync(paths.configPath, "utf8")) as Partial<AppConfig>)
+    : {};
 
-  const parsed = JSON.parse(fs.readFileSync(paths.configPath, "utf8")) as Partial<AppConfig>;
-  return validateConfig({ ...defaultConfig, ...parsed });
+  return validateConfig({ ...defaultConfig, ...fileConfig, ...pluginEnvConfig(process.env) });
 }
 
 export function saveConfig(paths: RuntimePaths, config: AppConfig): void {
@@ -69,5 +68,27 @@ export function validateConfig(config: AppConfig): AppConfig {
   if (config.resolverCacheHours < 1 || config.resolverCacheHours > 168) {
     throw new Error("resolverCacheHours must be between 1 and 168");
   }
+  return config;
+}
+
+export function pluginEnvConfig(env: NodeJS.ProcessEnv): Partial<AppConfig> {
+  const config: Partial<AppConfig> = {};
+
+  if (env.CLAUDE_PLUGIN_OPTION_language === "english" || env.CLAUDE_PLUGIN_OPTION_language === "hebrew") {
+    config.language = env.CLAUDE_PLUGIN_OPTION_language;
+  }
+  if (env.CLAUDE_PLUGIN_OPTION_format === "full" || env.CLAUDE_PLUGIN_OPTION_format === "chazarah") {
+    config.format = env.CLAUDE_PLUGIN_OPTION_format;
+  }
+  if (env.CLAUDE_PLUGIN_OPTION_timezone) {
+    config.timezone = env.CLAUDE_PLUGIN_OPTION_timezone;
+  }
+  if (env.CLAUDE_PLUGIN_OPTION_auto_open_player === "true") {
+    config.autoOpenPlayer = true;
+  }
+  if (env.CLAUDE_PLUGIN_OPTION_auto_open_player === "false") {
+    config.autoOpenPlayer = false;
+  }
+
   return config;
 }
