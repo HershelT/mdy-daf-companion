@@ -15,6 +15,16 @@ export interface HookEventRecord {
   error: string | null;
 }
 
+export interface PlaybackProgressRecord {
+  videoId: string;
+  positionSeconds: number;
+  durationSeconds: number | null;
+  completed: boolean;
+  completionPercent: number;
+  lastWatchedAt: string;
+  updatedAt: string;
+}
+
 export class AppDatabase {
   private db: DatabaseSync;
 
@@ -109,6 +119,58 @@ export class AppDatabase {
     return row || null;
   }
 
+  upsertPlaybackProgress(record: PlaybackProgressRecord): void {
+    this.db
+      .prepare(
+        `INSERT INTO playback_progress (
+          video_id,
+          position_seconds,
+          duration_seconds,
+          completed,
+          completion_percent,
+          last_watched_at,
+          updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(video_id) DO UPDATE SET
+          position_seconds = excluded.position_seconds,
+          duration_seconds = excluded.duration_seconds,
+          completed = excluded.completed,
+          completion_percent = excluded.completion_percent,
+          last_watched_at = excluded.last_watched_at,
+          updated_at = excluded.updated_at`
+      )
+      .run(
+        record.videoId,
+        record.positionSeconds,
+        record.durationSeconds,
+        record.completed ? 1 : 0,
+        record.completionPercent,
+        record.lastWatchedAt,
+        record.updatedAt
+      );
+  }
+
+  getPlaybackProgress(videoId: string): PlaybackProgressRecord | null {
+    const row = this.db
+      .prepare(
+        `SELECT
+          video_id AS videoId,
+          position_seconds AS positionSeconds,
+          duration_seconds AS durationSeconds,
+          completed,
+          completion_percent AS completionPercent,
+          last_watched_at AS lastWatchedAt,
+          updated_at AS updatedAt
+        FROM playback_progress
+        WHERE video_id = ?`
+      )
+      .get(videoId) as
+      | (Omit<PlaybackProgressRecord, "completed"> & { completed: number })
+      | undefined;
+
+    return row ? { ...row, completed: row.completed === 1 } : null;
+  }
+
   close(): void {
     this.db.close();
   }
@@ -123,4 +185,3 @@ export function withDatabase<T>(paths: RuntimePaths, fn: (database: AppDatabase)
     database.close();
   }
 }
-

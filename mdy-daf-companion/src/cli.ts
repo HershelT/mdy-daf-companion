@@ -2,7 +2,7 @@
 import { ingestHookEvent } from "./hooks/ingest.js";
 import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
-import { sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { getPlayerUrl, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
 import { getLiveStatusText } from "./status/status.js";
@@ -67,6 +67,11 @@ async function main(): Promise<void> {
       const date = argValue("--date", new Date().toISOString().slice(0, 10));
       const daf = await new HebcalDafCalendar().getDafForDate(date);
       process.stdout.write(`${daf.date}: ${daf.masechta} ${daf.daf}\n`);
+      return;
+    }
+    case "player-url": {
+      await startDaemonProcess(resolveRuntimePaths());
+      process.stdout.write(`${await getPlayerUrl(resolveRuntimePaths())}\n`);
       return;
     }
     case "stats":

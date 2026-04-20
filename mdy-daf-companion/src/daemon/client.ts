@@ -46,6 +46,14 @@ export async function sendDaemonAction(paths: RuntimePaths, action: string): Pro
   return daemonFetch(state, `/${action}`, { method: "POST" });
 }
 
+export async function getPlayerUrl(paths: RuntimePaths): Promise<string> {
+  const state = readDaemonState(paths);
+  if (!state) {
+    throw new DaemonUnavailableError();
+  }
+  return `http://${state.host}:${state.port}/player?token=${encodeURIComponent(state.token)}`;
+}
+
 export async function sendHookToDaemon(
   paths: RuntimePaths,
   fallbackEvent: string,
@@ -94,4 +102,3 @@ export async function startDaemonProcess(paths: RuntimePaths): Promise<void> {
   });
   child.unref();
 }
-

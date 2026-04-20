@@ -35,3 +35,30 @@ test("database migrates and records hook events", () => {
   assert.equal(database.getLatestHookEvent()?.eventName, "Stop");
   database.close();
 });
+
+test("database upserts playback progress", () => {
+  const database = new AppDatabase(tempPaths());
+  database.migrate();
+  database.upsertPlaybackProgress({
+    videoId: "video-1",
+    positionSeconds: 30,
+    durationSeconds: 100,
+    completed: false,
+    completionPercent: 30,
+    lastWatchedAt: "2026-04-19T00:00:00.000Z",
+    updatedAt: "2026-04-19T00:00:00.000Z"
+  });
+  database.upsertPlaybackProgress({
+    videoId: "video-1",
+    positionSeconds: 95,
+    durationSeconds: 100,
+    completed: true,
+    completionPercent: 95,
+    lastWatchedAt: "2026-04-19T00:01:00.000Z",
+    updatedAt: "2026-04-19T00:01:00.000Z"
+  });
+  const progress = database.getPlaybackProgress("video-1");
+  assert.equal(progress?.positionSeconds, 95);
+  assert.equal(progress?.completed, true);
+  database.close();
+});

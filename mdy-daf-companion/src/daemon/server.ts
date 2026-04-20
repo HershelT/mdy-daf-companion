@@ -6,6 +6,7 @@ import { AppDatabase } from "../storage/database.js";
 import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import type { DaemonActionResult, DaemonStatus, PlaybackState } from "./protocol.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
+import { renderPlayerPage } from "../player/page.js";
 
 export interface DaemonServerHandle {
   server: http.Server;
@@ -18,6 +19,7 @@ export interface DaemonServerHandle {
 interface DaemonMemoryState {
   playbackState: PlaybackState;
   lastAction: string | null;
+  currentVideoId: string | null;
 }
 
 async function readBody(request: IncomingMessage): Promise<string> {
@@ -49,7 +51,8 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
   const startedAt = nowIso();
   const memory: DaemonMemoryState = {
     playbackState: "idle",
-    lastAction: null
+    lastAction: null,
+    currentVideoId: null
   };
 
   const database = new AppDatabase(paths);
@@ -57,15 +60,31 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
 
   const server = http.createServer(async (request, response) => {
     try {
-      if (!authorized(request, token)) {
+      const url = new URL(request.url || "/", "http://127.0.0.1");
+      const queryAuthorized = url.searchParams.get("token") === token;
+
+      if (!authorized(request, token) && !queryAuthorized) {
         sendJson(response, 401, { ok: false, error: "Unauthorized" });
         return;
       }
 
-      const url = new URL(request.url || "/", "http://127.0.0.1");
-
       if (request.method === "GET" && url.pathname === "/health") {
         sendJson(response, 200, { ok: true, pid: process.pid, startedAt });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/player") {
+        response.writeHead(200, {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store"
+        });
+        response.end(
+          renderPlayerPage({
+            token,
+            videoId: memory.currentVideoId,
+            playbackState: memory.playbackState
+          })
+        );
         return;
       }
 
@@ -100,6 +119,45 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           actionTaken: record.actionTaken,
           parseError: error
         });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/video") {
+        const body = JSON.parse(await readBody(request)) as { videoId?: string };
+        if (!body.videoId) {
+          sendJson(response, 400, { ok: false, error: "videoId is required" });
+          return;
+        }
+        memory.currentVideoId = body.videoId;
+        sendJson(response, 200, { ok: true, videoId: memory.currentVideoId });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/progress") {
+        const body = JSON.parse(await readBody(request)) as {
+          videoId?: string;
+          positionSeconds?: number;
+          durationSeconds?: number | null;
+        };
+        if (!body.videoId || typeof body.positionSeconds !== "number") {
+          sendJson(response, 400, { ok: false, error: "videoId and positionSeconds are required" });
+          return;
+        }
+        const duration = typeof body.durationSeconds === "number" ? body.durationSeconds : null;
+        const completionPercent = duration
+          ? Math.max(0, Math.min(100, (body.positionSeconds / duration) * 100))
+          : 0;
+        const timestamp = nowIso();
+        database.upsertPlaybackProgress({
+          videoId: body.videoId,
+          positionSeconds: body.positionSeconds,
+          durationSeconds: duration,
+          completed: completionPercent >= 90,
+          completionPercent,
+          lastWatchedAt: timestamp,
+          updatedAt: timestamp
+        });
+        sendJson(response, 200, { ok: true, completionPercent });
         return;
       }
 
@@ -157,4 +215,3 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
 export async function runDaemon(paths: RuntimePaths): Promise<void> {
   await startDaemonServer(paths);
 }
-

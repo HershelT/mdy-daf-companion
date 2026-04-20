@@ -6,6 +6,7 @@ import test from "node:test";
 import type { RuntimePaths } from "../src/core/paths.js";
 import { sendDaemonAction, sendHookToDaemon } from "../src/daemon/client.js";
 import { startDaemonServer } from "../src/daemon/server.js";
+import { AppDatabase } from "../src/storage/database.js";
 
 function tempPaths(): RuntimePaths {
   const dataRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdy-daemon-test-"));
@@ -61,5 +62,49 @@ test("daemon records hook events and updates playback state", async () => {
   } finally {
     await daemon.close();
   }
+});
+
+test("daemon serves token-protected player page", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const unauthorized = await fetch(`http://127.0.0.1:${daemon.port}/player`);
+    assert.equal(unauthorized.status, 401);
+
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/player?token=${daemon.token}`);
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /youtube\.com\/iframe_api/);
+    assert.match(html, /MDY Daf Companion/);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("daemon records player progress", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/api/progress`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${daemon.token}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        videoId: "video-1",
+        positionSeconds: 45,
+        durationSeconds: 100
+      })
+    });
+    assert.equal(response.status, 200);
+  } finally {
+    await daemon.close();
+  }
+
+  const database = new AppDatabase(paths);
+  database.migrate();
+  assert.equal(database.getPlaybackProgress("video-1")?.completionPercent, 45);
+  database.close();
 });
 
