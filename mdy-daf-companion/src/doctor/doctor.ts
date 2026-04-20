@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { isClaudeRemoteEnvironment, isProbablySshEnvironment } from "../core/environment.js";
 import { resolveRuntimePaths } from "../core/paths.js";
 import { AppDatabase } from "../storage/database.js";
 
@@ -20,6 +21,15 @@ export function runDoctor(): DoctorReport {
   const checks: DoctorCheck[] = [];
 
   checks.push(check("node-version", process.versions.node.startsWith("24."), `Node ${process.versions.node}`));
+  checks.push({
+    name: "surface",
+    status: isClaudeRemoteEnvironment() ? "warn" : "pass",
+    detail: isClaudeRemoteEnvironment()
+      ? "Claude remote/cloud environment detected; local player daemon is disabled"
+      : isProbablySshEnvironment()
+        ? "SSH/container-like environment detected; player may need port forwarding or remote-safe mode"
+        : "Local Claude Code environment"
+  });
   checks.push(
     check(
       "plugin-manifest",
@@ -76,4 +86,3 @@ function check(name: string, passed: boolean, detail: string): DoctorCheck {
     detail
   };
 }
-

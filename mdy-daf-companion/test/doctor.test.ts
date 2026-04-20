@@ -9,8 +9,10 @@ test("doctor report passes in plugin workspace with temp data root", () => {
   const dataRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdy-doctor-test-"));
   const previousData = process.env.CLAUDE_PLUGIN_DATA;
   const previousRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  const previousRemote = process.env.CLAUDE_CODE_REMOTE;
   process.env.CLAUDE_PLUGIN_DATA = dataRoot;
   process.env.CLAUDE_PLUGIN_ROOT = process.cwd();
+  delete process.env.CLAUDE_CODE_REMOTE;
 
   try {
     const report = runDoctor();
@@ -27,6 +29,28 @@ test("doctor report passes in plugin workspace with temp data root", () => {
       delete process.env.CLAUDE_PLUGIN_ROOT;
     } else {
       process.env.CLAUDE_PLUGIN_ROOT = previousRoot;
+    }
+    if (previousRemote === undefined) {
+      delete process.env.CLAUDE_CODE_REMOTE;
+    } else {
+      process.env.CLAUDE_CODE_REMOTE = previousRemote;
+    }
+  }
+});
+
+test("doctor warns in Claude remote environment", () => {
+  const previousRemote = process.env.CLAUDE_CODE_REMOTE;
+  process.env.CLAUDE_CODE_REMOTE = "true";
+
+  try {
+    const report = runDoctor();
+    const surface = report.checks.find((item) => item.name === "surface");
+    assert.equal(surface?.status, "warn");
+  } finally {
+    if (previousRemote === undefined) {
+      delete process.env.CLAUDE_CODE_REMOTE;
+    } else {
+      process.env.CLAUDE_CODE_REMOTE = previousRemote;
     }
   }
 });

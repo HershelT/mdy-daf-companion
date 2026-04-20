@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RuntimePaths } from "../core/paths.js";
+import { isClaudeRemoteEnvironment } from "../core/environment.js";
 import { readDaemonState, type DaemonStateFile } from "./state.js";
 
 export class DaemonUnavailableError extends Error {
@@ -84,6 +85,10 @@ export async function isDaemonHealthy(paths: RuntimePaths): Promise<boolean> {
 }
 
 export async function startDaemonProcess(paths: RuntimePaths): Promise<void> {
+  if (isClaudeRemoteEnvironment()) {
+    throw new DaemonUnavailableError("Daemon is disabled in Claude remote/cloud environments");
+  }
+
   if (await isDaemonHealthy(paths)) {
     return;
   }

@@ -71,6 +71,8 @@ node dist/src/cli.js player-url
 
 The remaining work is to connect live MDY/YouTube candidate discovery, launch the player window automatically, and package cross-platform release wrappers.
 
+Compatibility research is in `docs/research/claude-code-surface-compatibility.md`. Short version: local CLI, local Desktop, and likely local VS Code are the main supported targets; Desktop remote/cloud sessions do not support plugins; SSH/dev-container sessions need remote-safe playback handling.
+
 
 ## Disclaimer
 
