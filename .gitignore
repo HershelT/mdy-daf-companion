@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.tmp-plugin-data/
+*.sqlite
+*.sqlite-*
+*.log
+.DS_Store
+Thumbs.db
+

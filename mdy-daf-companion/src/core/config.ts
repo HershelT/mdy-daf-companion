@@ -1,0 +1,68 @@
+import fs from "node:fs";
+import type { RuntimePaths } from "./paths.js";
+
+export type ShiurLanguage = "english" | "hebrew";
+export type ShiurFormat = "full" | "chazarah";
+export type PlaybackMode = "on_prompt_until_stop" | "manual" | "tool_activity";
+
+export interface AppConfig {
+  language: ShiurLanguage;
+  format: ShiurFormat;
+  playbackMode: PlaybackMode;
+  timezone: string;
+  israelDateMode: boolean;
+  shabbosYomTovGuard: boolean;
+  strictGuard: boolean;
+  storeRawProjectPaths: boolean;
+  progressFlushSeconds: number;
+  resolverCacheHours: number;
+}
+
+export const defaultConfig: AppConfig = {
+  language: "english",
+  format: "full",
+  playbackMode: "on_prompt_until_stop",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  israelDateMode: false,
+  shabbosYomTovGuard: true,
+  strictGuard: false,
+  storeRawProjectPaths: false,
+  progressFlushSeconds: 5,
+  resolverCacheHours: 12
+};
+
+export function loadConfig(paths: RuntimePaths): AppConfig {
+  if (!fs.existsSync(paths.configPath)) {
+    return defaultConfig;
+  }
+
+  const parsed = JSON.parse(fs.readFileSync(paths.configPath, "utf8")) as Partial<AppConfig>;
+  return validateConfig({ ...defaultConfig, ...parsed });
+}
+
+export function saveConfig(paths: RuntimePaths, config: AppConfig): void {
+  fs.writeFileSync(paths.configPath, `${JSON.stringify(validateConfig(config), null, 2)}\n`, "utf8");
+}
+
+export function validateConfig(config: AppConfig): AppConfig {
+  if (!["english", "hebrew"].includes(config.language)) {
+    throw new Error(`Invalid language: ${config.language}`);
+  }
+  if (!["full", "chazarah"].includes(config.format)) {
+    throw new Error(`Invalid format: ${config.format}`);
+  }
+  if (!["on_prompt_until_stop", "manual", "tool_activity"].includes(config.playbackMode)) {
+    throw new Error(`Invalid playbackMode: ${config.playbackMode}`);
+  }
+  if (!config.timezone || typeof config.timezone !== "string") {
+    throw new Error("timezone is required");
+  }
+  if (config.progressFlushSeconds < 1 || config.progressFlushSeconds > 120) {
+    throw new Error("progressFlushSeconds must be between 1 and 120");
+  }
+  if (config.resolverCacheHours < 1 || config.resolverCacheHours > 168) {
+    throw new Error("resolverCacheHours must be between 1 and 168");
+  }
+  return config;
+}
+

@@ -1,0 +1,126 @@
+import crypto from "node:crypto";
+import { DatabaseSync } from "node:sqlite";
+import { nowIso } from "../core/time.js";
+import type { RuntimePaths } from "../core/paths.js";
+import { ensureRuntimeDirs } from "../core/paths.js";
+import { migrations } from "./migrations.js";
+
+export interface HookEventRecord {
+  claudeSessionId: string | null;
+  eventName: string;
+  matcher: string | null;
+  receivedAt: string;
+  actionTaken: string | null;
+  payloadHash: string | null;
+  error: string | null;
+}
+
+export class AppDatabase {
+  private db: DatabaseSync;
+
+  constructor(private readonly paths: RuntimePaths) {
+    ensureRuntimeDirs(paths);
+    this.db = new DatabaseSync(paths.databasePath);
+    this.db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+  }
+
+  migrate(): void {
+    this.db.exec("BEGIN");
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS schema_migrations (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          applied_at TEXT NOT NULL
+        );
+      `);
+
+      const appliedRows = this.db
+        .prepare("SELECT id FROM schema_migrations")
+        .all() as Array<{ id: number }>;
+      const applied = new Set(appliedRows.map((row) => row.id));
+
+      for (const migration of migrations) {
+        if (applied.has(migration.id)) {
+          continue;
+        }
+        this.db.exec(migration.sql);
+        this.db
+          .prepare("INSERT INTO schema_migrations (id, name, applied_at) VALUES (?, ?, ?)")
+          .run(migration.id, migration.name, nowIso());
+      }
+
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  insertHookEvent(record: HookEventRecord): string {
+    const id = crypto.randomUUID();
+    this.db
+      .prepare(
+        `INSERT INTO hook_events (
+          id,
+          claude_session_id,
+          event_name,
+          matcher,
+          received_at,
+          action_taken,
+          payload_hash,
+          error
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        id,
+        record.claudeSessionId,
+        record.eventName,
+        record.matcher,
+        record.receivedAt,
+        record.actionTaken,
+        record.payloadHash,
+        record.error
+      );
+    return id;
+  }
+
+  getHookEventCount(): number {
+    const row = this.db.prepare("SELECT COUNT(*) AS count FROM hook_events").get() as { count: number };
+    return row.count;
+  }
+
+  getLatestHookEvent(): HookEventRecord | null {
+    const row = this.db
+      .prepare(
+        `SELECT
+          claude_session_id AS claudeSessionId,
+          event_name AS eventName,
+          matcher,
+          received_at AS receivedAt,
+          action_taken AS actionTaken,
+          payload_hash AS payloadHash,
+          error
+        FROM hook_events
+        ORDER BY received_at DESC
+        LIMIT 1`
+      )
+      .get() as HookEventRecord | undefined;
+    return row || null;
+  }
+
+  close(): void {
+    this.db.close();
+  }
+}
+
+export function withDatabase<T>(paths: RuntimePaths, fn: (database: AppDatabase) => T): T {
+  const database = new AppDatabase(paths);
+  try {
+    database.migrate();
+    return fn(database);
+  } finally {
+    database.close();
+  }
+}
+
