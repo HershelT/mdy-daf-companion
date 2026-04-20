@@ -32,6 +32,17 @@ test("daemon rejects unauthenticated requests", async () => {
   }
 });
 
+test("daemon serves favicon without auth noise", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/favicon.ico`);
+    assert.equal(response.status, 204);
+  } finally {
+    await daemon.close();
+  }
+});
+
 test("daemon accepts playback actions through client", async () => {
   const paths = tempPaths();
   const daemon = await startDaemonServer(paths);

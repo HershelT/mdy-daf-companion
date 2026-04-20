@@ -101,4 +101,12 @@ export async function startDaemonProcess(paths) {
         }
     });
     child.unref();
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+        if (await isDaemonHealthy(paths)) {
+            return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    throw new DaemonUnavailableError("Daemon did not become healthy within 5 seconds");
 }

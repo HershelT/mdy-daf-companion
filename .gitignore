@@ -11,3 +11,8 @@ mdy-daf-companion/dist/test/
 *.log
 .DS_Store
 Thumbs.db
+.claude/settings.local.json
+.playwright-cli/
+output/
+mdy-daf-companion/.playwright-cli/
+mdy-daf-companion/output/

@@ -102,6 +102,11 @@ export async function startDaemonServer(paths, port = 0) {
         try {
             const url = new URL(request.url || "/", "http://127.0.0.1");
             const queryAuthorized = url.searchParams.get("token") === token;
+            if (request.method === "GET" && url.pathname === "/favicon.ico") {
+                response.writeHead(204, { "cache-control": "public, max-age=86400" });
+                response.end();
+                return;
+            }
             if (!authorized(request, token) && !queryAuthorized) {
                 sendJson(response, 401, { ok: false, error: "Unauthorized" });
                 return;
