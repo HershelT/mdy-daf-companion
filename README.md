@@ -6,7 +6,7 @@ The goal is to build a polished plugin that plays the latest Rabbi Eli Stefansky
 
 ## Current State
 
-This is a planning and scaffold package, not the finished runtime.
+This is now an implemented foundation plus product/spec package. The runtime can ingest Claude Code hook events, start a local daemon, expose an authenticated local API, serve a YouTube IFrame player shell, persist playback progress, resolve Daf Yomi calendar data, and report local stats.
 
 Included:
 
@@ -17,8 +17,8 @@ Included:
 - Data model.
 - Testing strategy.
 - Release and marketing plan.
-- Initial Claude Code plugin structure under `mdy-daf-companion/`.
-- Placeholder hook and CLI scripts for safe validation experiments.
+- Claude Code plugin structure under `mdy-daf-companion/`.
+- Tested TypeScript runtime with CLI, hooks, daemon, resolver, player shell, stats, and doctor checks.
 
 ## Key Docs
 
@@ -57,9 +57,21 @@ Then validate with:
 claude plugin validate ./mdy-daf-companion
 ```
 
-The runtime implementation still needs to be built according to `docs/implementation-roadmap.md`.
+Useful runtime commands from `mdy-daf-companion/`:
+
+```bash
+npm install
+npm test
+npm run validate:plugin
+node dist/src/cli.js doctor
+node dist/src/cli.js today --date 2026-04-20
+node dist/src/cli.js start-daemon
+node dist/src/cli.js player-url
+```
+
+The remaining work is to connect live MDY/YouTube candidate discovery, launch the player window automatically, and package cross-platform release wrappers.
+
 
 ## Disclaimer
 
 This project is an independent companion concept and is not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
-

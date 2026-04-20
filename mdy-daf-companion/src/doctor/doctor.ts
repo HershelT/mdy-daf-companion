@@ -1,0 +1,79 @@
+import fs from "node:fs";
+import { resolveRuntimePaths } from "../core/paths.js";
+import { AppDatabase } from "../storage/database.js";
+
+export type DoctorStatus = "pass" | "warn" | "fail";
+
+export interface DoctorCheck {
+  name: string;
+  status: DoctorStatus;
+  detail: string;
+}
+
+export interface DoctorReport {
+  ok: boolean;
+  checks: DoctorCheck[];
+}
+
+export function runDoctor(): DoctorReport {
+  const paths = resolveRuntimePaths();
+  const checks: DoctorCheck[] = [];
+
+  checks.push(check("node-version", process.versions.node.startsWith("24."), `Node ${process.versions.node}`));
+  checks.push(
+    check(
+      "plugin-manifest",
+      fs.existsSync(`${paths.pluginRoot}/.claude-plugin/plugin.json`),
+      "Plugin manifest is present"
+    )
+  );
+  checks.push(
+    check("hook-config", fs.existsSync(`${paths.pluginRoot}/hooks/hooks.json`), "Hook config is present")
+  );
+
+  try {
+    fs.mkdirSync(paths.dataRoot, { recursive: true });
+    fs.accessSync(paths.dataRoot, fs.constants.W_OK);
+    checks.push({ name: "data-directory", status: "pass", detail: paths.dataRoot });
+  } catch (error) {
+    checks.push({
+      name: "data-directory",
+      status: "fail",
+      detail: error instanceof Error ? error.message : String(error)
+    });
+  }
+
+  try {
+    const database = new AppDatabase(paths);
+    database.migrate();
+    database.close();
+    checks.push({ name: "sqlite", status: "pass", detail: "SQLite migrations applied" });
+  } catch (error) {
+    checks.push({
+      name: "sqlite",
+      status: "fail",
+      detail: error instanceof Error ? error.message : String(error)
+    });
+  }
+
+  return {
+    ok: checks.every((item) => item.status !== "fail"),
+    checks
+  };
+}
+
+export function formatDoctorReport(report: DoctorReport): string {
+  const lines = report.checks.map(
+    (item) => `${item.status.toUpperCase().padEnd(4)} ${item.name}: ${item.detail}`
+  );
+  return [`MDY Daf Companion doctor: ${report.ok ? "ok" : "needs attention"}`, ...lines].join("\n");
+}
+
+function check(name: string, passed: boolean, detail: string): DoctorCheck {
+  return {
+    name,
+    status: passed ? "pass" : "fail",
+    detail
+  };
+}
+

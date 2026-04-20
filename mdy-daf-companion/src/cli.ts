@@ -4,6 +4,7 @@ import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
 import { getPlayerUrl, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
+import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
 import { formatStatsSummary, getTodayStatsSummary } from "./stats/summary.js";
 import { getLiveStatusText } from "./status/status.js";
@@ -80,9 +81,9 @@ async function main(): Promise<void> {
       return;
     }
     case "doctor": {
-      process.stdout.write(
-        `${command} is wired into the CLI. The daemon/player implementation arrives in the next phases.\n`
-      );
+      const report = runDoctor();
+      process.stdout.write(`${formatDoctorReport(report)}\n`);
+      process.exitCode = report.ok ? 0 : 1;
       return;
     }
     default:

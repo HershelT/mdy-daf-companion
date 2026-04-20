@@ -1,21 +1,23 @@
 #!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-const command = process.argv[2] || "status";
+const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const compiledCli = path.join(pluginRoot, "dist", "src", "cli.js");
 
-const messages = {
-  status:
-    "MDY Daf Companion scaffold is installed. Runtime status will be implemented by the daemon.",
-  play:
-    "Playback command accepted by scaffold. Production build will forward this to the daemon.",
-  pause:
-    "Pause command accepted by scaffold. Production build will save progress through the daemon.",
-  resume:
-    "Resume command accepted by scaffold. Production build will resume the current shiur.",
-  stats:
-    "Stats command accepted by scaffold. Production build will read local SQLite stats.",
-  doctor:
-    "Doctor command accepted by scaffold. Production build will validate hooks, daemon, player, and resolver."
-};
+if (!fs.existsSync(compiledCli)) {
+  console.error("MDY Daf Companion runtime has not been built yet. Run `npm install && npm run build` in the plugin directory.");
+  process.exit(1);
+}
 
-console.log(messages[command] || `Unknown command: ${command}`);
+const result = spawnSync(process.execPath, [compiledCli, ...process.argv.slice(2)], {
+  stdio: "inherit",
+  env: {
+    ...process.env,
+    CLAUDE_PLUGIN_ROOT: process.env.CLAUDE_PLUGIN_ROOT || pluginRoot
+  }
+});
 
+process.exit(result.status ?? 1);
