@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { ingestHookEvent } from "./hooks/ingest.js";
-import { formatStatus, getStatusSummary } from "./status/status.js";
+import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
+import { resolveRuntimePaths } from "./core/paths.js";
+import { sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { runDaemon } from "./daemon/server.js";
+import { getLiveStatusText } from "./status/status.js";
 
 async function readStdin(): Promise<string> {
   let input = "";
@@ -23,20 +27,41 @@ async function main(): Promise<void> {
     case "hook": {
       const fallbackEventName = argValue("--event", "Unknown");
       const stdin = await readStdin();
-      const result = ingestHookEvent(stdin, fallbackEventName);
-      if (result.parseError) {
+      const direct = process.argv.includes("--direct");
+      const result = direct
+        ? ingestHookEvent(stdin, fallbackEventName)
+        : await ingestHookEventViaDaemon(stdin, fallbackEventName);
+      if (
+        typeof result === "object" &&
+        result &&
+        "parseError" in result &&
+        typeof result.parseError === "string"
+      ) {
         console.error(`Recorded hook with parse error: ${result.parseError}`);
       }
       process.stdout.write(`${JSON.stringify(result)}\n`);
       return;
     }
     case "status": {
-      process.stdout.write(`${formatStatus(getStatusSummary())}\n`);
+      process.stdout.write(`${await getLiveStatusText()}\n`);
+      return;
+    }
+    case "daemon": {
+      await runDaemon(resolveRuntimePaths());
+      return;
+    }
+    case "start-daemon": {
+      await startDaemonProcess(resolveRuntimePaths());
+      process.stdout.write("Daemon start requested.\n");
       return;
     }
     case "play":
     case "pause":
-    case "resume":
+    case "resume": {
+      const result = await sendDaemonAction(resolveRuntimePaths(), command);
+      process.stdout.write(`${JSON.stringify(result)}\n`);
+      return;
+    }
     case "stats":
     case "doctor": {
       process.stdout.write(
@@ -54,4 +79,3 @@ main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 });
-

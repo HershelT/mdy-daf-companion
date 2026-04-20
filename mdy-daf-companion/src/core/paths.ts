@@ -8,6 +8,7 @@ export interface RuntimePaths {
   dataRoot: string;
   databasePath: string;
   configPath: string;
+  daemonStatePath: string;
   logPath: string;
 }
 
@@ -35,6 +36,7 @@ export function resolveRuntimePaths(env: NodeJS.ProcessEnv = process.env): Runti
     dataRoot,
     databasePath: path.join(dataRoot, "state.sqlite"),
     configPath: path.join(dataRoot, "config.json"),
+    daemonStatePath: path.join(dataRoot, "daemon.json"),
     logPath: path.join(dataRoot, "mdy-daf.log")
   };
 }
@@ -42,4 +44,3 @@ export function resolveRuntimePaths(env: NodeJS.ProcessEnv = process.env): Runti
 export function ensureRuntimeDirs(paths: RuntimePaths): void {
   fs.mkdirSync(paths.dataRoot, { recursive: true });
 }
-

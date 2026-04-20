@@ -13,6 +13,7 @@ function tempPaths(): RuntimePaths {
     dataRoot,
     databasePath: path.join(dataRoot, "state.sqlite"),
     configPath: path.join(dataRoot, "config.json"),
+    daemonStatePath: path.join(dataRoot, "daemon.json"),
     logPath: path.join(dataRoot, "mdy-daf.log")
   };
 }
@@ -35,4 +36,3 @@ test("validateConfig rejects invalid progress flush interval", () => {
     /progressFlushSeconds/
   );
 });
-

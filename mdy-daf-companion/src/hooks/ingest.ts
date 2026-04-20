@@ -1,4 +1,5 @@
 import { resolveRuntimePaths } from "../core/paths.js";
+import { sendHookToDaemon, startDaemonProcess } from "../daemon/client.js";
 import { withDatabase } from "../storage/database.js";
 import { parseHookPayload, toHookEventRecord } from "./events.js";
 
@@ -25,3 +26,15 @@ export function ingestHookEvent(stdin: string, fallbackEventName: string): Inges
   });
 }
 
+export async function ingestHookEventViaDaemon(
+  stdin: string,
+  fallbackEventName: string
+): Promise<unknown> {
+  const paths = resolveRuntimePaths();
+  try {
+    await startDaemonProcess(paths);
+    return await sendHookToDaemon(paths, fallbackEventName, stdin);
+  } catch {
+    return ingestHookEvent(stdin, fallbackEventName);
+  }
+}

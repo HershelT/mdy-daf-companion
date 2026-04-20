@@ -2,6 +2,8 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const args = process.argv.slice(2);
 const eventArgIndex = args.indexOf("--event");
@@ -14,6 +16,28 @@ process.stdin.on("data", (chunk) => {
 });
 
 process.stdin.on("end", () => {
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.resolve(scriptDir, "..");
+  const compiledCli = path.join(pluginRoot, "dist", "src", "cli.js");
+
+  if (fs.existsSync(compiledCli)) {
+    const result = spawnSync(
+      process.execPath,
+      [compiledCli, "hook", "--event", eventAlias],
+      {
+        input: stdin,
+        encoding: "utf8",
+        env: process.env,
+        timeout: 3000
+      }
+    );
+
+    if (result.status === 0) {
+      process.stdout.write(result.stdout || "");
+      process.exit(0);
+    }
+  }
+
   let payload = {};
   try {
     payload = stdin.trim() ? JSON.parse(stdin) : {};
@@ -46,4 +70,3 @@ process.stdin.on("end", () => {
 });
 
 process.stdin.resume();
-
