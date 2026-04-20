@@ -82,3 +82,12 @@ test("database increments daily stats without raw project data", () => {
   assert.equal(stats.dafimCompleted, 1);
   database.close();
 });
+
+test("database source cache expires stale values", () => {
+  const database = new AppDatabase(tempPaths());
+  database.migrate();
+  database.setSourceCache("key", "test", { ok: true }, "2026-04-20T00:00:00.000Z");
+  assert.deepEqual(database.getSourceCache("key", "2026-04-19T00:00:00.000Z"), { ok: true });
+  assert.equal(database.getSourceCache("key", "2026-04-21T00:00:00.000Z"), null);
+  database.close();
+});

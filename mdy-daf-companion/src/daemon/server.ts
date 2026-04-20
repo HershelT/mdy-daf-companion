@@ -12,7 +12,7 @@ import { renderPlayerPage } from "../player/page.js";
 import { openUrl } from "../player/launcher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
 import { chooseBestCandidate } from "../resolver/scoring.js";
-import { YouTubeChannelPageCandidateProvider } from "../resolver/youtubeChannelPage.js";
+import { createDefaultCandidateProvider } from "../resolver/defaultProvider.js";
 import { storeResolvedShiur, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
 import { shouldBlockAutoPlayback } from "../guard/shabbosGuard.js";
 
@@ -76,7 +76,7 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
 
   async function resolveAndStoreShiur(date = today()): Promise<string> {
     const daf = await new HebcalDafCalendar().getDafForDate(date);
-    const candidates = await new YouTubeChannelPageCandidateProvider().getCandidates(daf);
+    const candidates = await createDefaultCandidateProvider(paths, database).getCandidates(daf);
     const resolved = chooseBestCandidate(daf, candidates, {
       language: config.language,
       format: config.format

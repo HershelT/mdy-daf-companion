@@ -361,6 +361,44 @@ export class AppDatabase {
     return row || null;
   }
 
+  setSourceCache(
+    cacheKey: string,
+    source: string,
+    value: unknown,
+    expiresAt: string | null,
+    timestamp = nowIso()
+  ): void {
+    this.db
+      .prepare(
+        `INSERT INTO source_cache (cache_key, source, value_json, expires_at, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(cache_key) DO UPDATE SET
+          source = excluded.source,
+          value_json = excluded.value_json,
+          expires_at = excluded.expires_at,
+          updated_at = excluded.updated_at`
+      )
+      .run(cacheKey, source, JSON.stringify(value), expiresAt, timestamp, timestamp);
+  }
+
+  getSourceCache<T>(cacheKey: string, now = nowIso()): T | null {
+    const row = this.db
+      .prepare(
+        `SELECT value_json AS valueJson, expires_at AS expiresAt
+        FROM source_cache
+        WHERE cache_key = ?`
+      )
+      .get(cacheKey) as { valueJson: string; expiresAt: string | null } | undefined;
+
+    if (!row) {
+      return null;
+    }
+    if (row.expiresAt && row.expiresAt <= now) {
+      return null;
+    }
+    return JSON.parse(row.valueJson) as T;
+  }
+
   close(): void {
     this.db.close();
   }

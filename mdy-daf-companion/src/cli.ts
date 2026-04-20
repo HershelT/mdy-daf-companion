@@ -7,8 +7,8 @@ import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { openUrl } from "./player/launcher.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
+import { createDefaultCandidateProvider } from "./resolver/defaultProvider.js";
 import { chooseBestCandidate } from "./resolver/scoring.js";
-import { YouTubeChannelPageCandidateProvider } from "./resolver/youtubeChannelPage.js";
 import { applySetupOptions, formatSetupSummary } from "./settings/setup.js";
 import { formatStatsSummary, getTodayStatsSummary } from "./stats/summary.js";
 import { getLiveStatusText } from "./status/status.js";
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
     case "resolve": {
       const date = argValue("--date", new Date().toISOString().slice(0, 10));
       const daf = await new HebcalDafCalendar().getDafForDate(date);
-      const candidates = await new YouTubeChannelPageCandidateProvider().getCandidates(daf);
+      const candidates = await createDefaultCandidateProvider(resolveRuntimePaths()).getCandidates(daf);
       const resolved = chooseBestCandidate(daf, candidates, {
         language: "english",
         format: "full"
