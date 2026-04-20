@@ -9,10 +9,12 @@ import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import type { DaemonActionResult, DaemonStatus, PlaybackState } from "./protocol.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
 import { renderPlayerPage } from "../player/page.js";
+import { openUrl } from "../player/launcher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
 import { chooseBestCandidate } from "../resolver/scoring.js";
 import { YouTubeChannelPageCandidateProvider } from "../resolver/youtubeChannelPage.js";
 import { storeResolvedShiur, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
+import { shouldBlockAutoPlayback } from "../guard/shabbosGuard.js";
 
 export interface DaemonServerHandle {
   server: http.Server;
@@ -109,6 +111,10 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
     memory.activeCodingStartedAt ??= Date.now();
   }
 
+  function playerUrl(port: number): string {
+    return `http://127.0.0.1:${port}/player?token=${encodeURIComponent(token)}`;
+  }
+
   function flushCodingSeconds(): void {
     if (!memory.activeCodingStartedAt) {
       return;
@@ -175,22 +181,44 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
         const record = toHookEventRecord(payload, fallbackEvent, error);
         database.insertHookEvent(record);
         memory.lastAction = record.actionTaken;
+        const guard = shouldBlockAutoPlayback(config);
         if (record.actionTaken?.startsWith("pause")) {
           flushCodingSeconds();
           memory.playbackState = "paused";
         } else if (record.actionTaken === "resume") {
-          markCodingActive();
-          memory.playbackState = "playing";
+          if (guard.blocked) {
+            memory.playbackState = "blocked";
+            memory.lastAction = guard.reason;
+          } else {
+            markCodingActive();
+            memory.playbackState = "playing";
+            if (config.autoResolveShiur && !currentShiurStatus()) {
+              void resolveAndStoreShiur().catch(() => {});
+            }
+            if (config.autoOpenPlayer && config.openPlayerOnPrompt) {
+              const address = server.address();
+              if (address && typeof address !== "string") {
+                openUrl(playerUrl(address.port));
+              }
+            }
+          }
         } else if (record.actionTaken === "prepare") {
-          markCodingActive();
-          void resolveAndStoreShiur().catch(() => {});
+          if (guard.blocked) {
+            memory.playbackState = "blocked";
+            memory.lastAction = guard.reason;
+          } else {
+            markCodingActive();
+            if (config.autoResolveShiur) {
+              void resolveAndStoreShiur().catch(() => {});
+            }
+          }
         } else if (record.actionTaken === "close") {
           flushCodingSeconds();
         }
         sendJson(response, 200, {
           ok: true,
           eventName: record.eventName,
-          actionTaken: record.actionTaken,
+          actionTaken: memory.lastAction,
           parseError: error
         });
         return;
@@ -263,8 +291,13 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
 
       if (request.method === "POST" && ["/play", "/resume", "/pause", "/stop"].includes(url.pathname)) {
         const action = url.pathname.slice(1);
+        const guard = shouldBlockAutoPlayback(config);
         memory.lastAction = action;
         memory.playbackState = action === "pause" || action === "stop" ? "paused" : "playing";
+        if ((action === "play" || action === "resume") && guard.blocked) {
+          memory.lastAction = guard.reason;
+          memory.playbackState = "blocked";
+        }
         if (memory.playbackState === "playing") {
           markCodingActive();
         } else {

@@ -9,6 +9,7 @@ import { openUrl } from "./player/launcher.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
 import { chooseBestCandidate } from "./resolver/scoring.js";
 import { YouTubeChannelPageCandidateProvider } from "./resolver/youtubeChannelPage.js";
+import { applySetupOptions, formatSetupSummary } from "./settings/setup.js";
 import { formatStatsSummary, getTodayStatsSummary } from "./stats/summary.js";
 import { getLiveStatusText } from "./status/status.js";
 
@@ -59,6 +60,11 @@ async function main(): Promise<void> {
     case "start-daemon": {
       await startDaemonProcess(resolveRuntimePaths());
       process.stdout.write("Daemon start requested.\n");
+      return;
+    }
+    case "setup": {
+      const config = applySetupOptions(process.argv.slice(3));
+      process.stdout.write(`${formatSetupSummary(config)}\n`);
       return;
     }
     case "play":

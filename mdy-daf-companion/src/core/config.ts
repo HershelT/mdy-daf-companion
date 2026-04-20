@@ -13,6 +13,9 @@ export interface AppConfig {
   israelDateMode: boolean;
   shabbosYomTovGuard: boolean;
   strictGuard: boolean;
+  autoOpenPlayer: boolean;
+  autoResolveShiur: boolean;
+  openPlayerOnPrompt: boolean;
   storeRawProjectPaths: boolean;
   progressFlushSeconds: number;
   resolverCacheHours: number;
@@ -26,6 +29,9 @@ export const defaultConfig: AppConfig = {
   israelDateMode: false,
   shabbosYomTovGuard: true,
   strictGuard: false,
+  autoOpenPlayer: true,
+  autoResolveShiur: true,
+  openPlayerOnPrompt: true,
   storeRawProjectPaths: false,
   progressFlushSeconds: 5,
   resolverCacheHours: 12
@@ -65,4 +71,3 @@ export function validateConfig(config: AppConfig): AppConfig {
   }
   return config;
 }
-

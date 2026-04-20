@@ -30,6 +30,12 @@ test("saveConfig and loadConfig round trip valid config", () => {
   assert.deepEqual(loadConfig(paths), config);
 });
 
+test("default config enables production automation conservatively", () => {
+  assert.equal(defaultConfig.autoOpenPlayer, true);
+  assert.equal(defaultConfig.autoResolveShiur, true);
+  assert.equal(defaultConfig.shabbosYomTovGuard, true);
+});
+
 test("validateConfig rejects invalid progress flush interval", () => {
   assert.throws(
     () => validateConfig({ ...defaultConfig, progressFlushSeconds: 0 }),
