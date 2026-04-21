@@ -27,7 +27,18 @@ This is an independent project. It is not affiliated with or endorsed by Mercaz 
 
 Remote/cloud Claude sessions are not supported for local playback. SSH/dev-container sessions are partial because the daemon and Electron companion run wherever Claude Code runs.
 
-## Install
+## Install From Public Marketplace
+
+After the npm package is published and the marketplace repository is on GitHub:
+
+```bash
+claude plugin marketplace add OWNER/REPO
+claude plugin install mdy-daf-companion@mdy-daf-companion
+```
+
+No setup command is required. Start Claude Code normally and submit a prompt; the plugin resolves today's Daf Yomi, opens the Electron companion, and starts playback when safe. Use `/mdy-daf-companion:setup` later only if you want to change preferences.
+
+## Local Development Install
 
 From the repository root:
 
@@ -65,12 +76,12 @@ After install, reload plugins if Claude Code is already running:
 
 ## First Run
 
-Inside Claude Code:
+No command is required for the default flow. The first local Claude Code prompt triggers auto-resolve and auto-open. Optional manual commands:
 
 ```text
-/mdy-daf-companion:setup
-/mdy-daf-companion:prepare
 /mdy-daf-companion:play
+/mdy-daf-companion:status
+/mdy-daf-companion:setup
 ```
 
 Open the in-companion stats view:
@@ -85,11 +96,10 @@ Check health:
 /mdy-daf-companion:status
 ```
 
-Equivalent direct CLI setup:
+Equivalent direct CLI preference and manual open commands:
 
 ```bash
 mdy-daf setup --language english --format full --timezone America/Chicago --guard true --auto-open true
-mdy-daf prepare
 mdy-daf open-player
 mdy-daf open-dashboard
 mdy-daf doctor
@@ -122,6 +132,8 @@ The companion intentionally stays open when Claude stops. Best practice here is 
 - Closing the companion does not stop the daemon. The next prompt or `/play` can reopen it.
 
 `mdy-daf open-player`, `/play`, and the Claude `UserPromptSubmit` hook all request playback before opening or refocusing the companion. The Electron shell allows autoplay and the YouTube iframe is created with autoplay enabled when daemon state is `playing`. If YouTube still requires a one-time user gesture on a particular machine, click the YouTube play overlay once; subsequent daemon play/pause calls continue from saved progress.
+
+Clean first-run resolution is verified by `npm run verify:current-daf`. The verifier creates a temporary data directory with no setup file, computes today's date in the default timezone, asks Hebcal for Daf Yomi, resolves through the daemon, and fails if the selected shiur's masechta/daf does not match Hebcal.
 
 ## Commands
 

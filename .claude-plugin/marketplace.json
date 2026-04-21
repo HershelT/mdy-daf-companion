@@ -10,8 +10,13 @@
   "plugins": [
     {
       "name": "mdy-daf-companion",
-      "source": "./mdy-daf-companion",
+      "source": {
+        "source": "npm",
+        "package": "mdy-daf-companion",
+        "version": "0.1.0"
+      },
       "description": "Play the latest Rabbi Eli Stefansky / MDY Daf Yomi shiur while Claude Code works.",
+      "version": "0.1.0",
       "category": "productivity",
       "tags": [
         "daf-yomi",
@@ -23,4 +28,3 @@
     }
   ]
 }
-

@@ -29,7 +29,18 @@ Reference docs:
 - https://code.claude.com/docs/en/desktop
 - https://code.claude.com/docs/en/vs-code
 
-## Install From This Repository
+## Install From Public Marketplace
+
+After publishing `mdy-daf-companion` to npm and pushing this marketplace repository to GitHub:
+
+```bash
+claude plugin marketplace add OWNER/REPO
+claude plugin install mdy-daf-companion@mdy-daf-companion
+```
+
+No setup command is required. The default install auto-resolves today's Daf Yomi and opens the Electron companion on the first local Claude Code prompt. `/mdy-daf-companion:setup` is optional preference tuning.
+
+## Install From This Repository For Development
 
 First build and package the companion. Electron Packager creates OS-specific folders such as `out/mdy-daf-companion-win32-x64`; release archives should include the relevant folder. Development installs can still use the local `electron` dependency after `npm install`.
 
@@ -45,7 +56,7 @@ cd ..
 
 On Windows, `npm run package:companion:win` runs a preflight cleanup before Electron Packager starts. It closes stale packaged companion processes from `out\` and removes the old output folder. If Windows still reports `EPERM` while unlinking a DLL, close MDY Daf Companion and pause OneDrive or antivirus scanning for the release folder, then rerun the command.
 
-From the repository root:
+After the npm package is published, test the marketplace from the repository root:
 
 ```bash
 claude plugin validate .

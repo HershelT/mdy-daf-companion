@@ -6,6 +6,7 @@ import test from "node:test";
 import type { RuntimePaths } from "../src/core/paths.js";
 import { sendDaemonAction, sendHookToDaemon } from "../src/daemon/client.js";
 import { startDaemonServer } from "../src/daemon/server.js";
+import { CURRENT_SHIUR_SETTING } from "../src/resolver/persist.js";
 import { AppDatabase } from "../src/storage/database.js";
 import { civilDateInTimezone } from "../src/core/time.js";
 
@@ -19,6 +20,24 @@ function tempPaths(): RuntimePaths {
     daemonStatePath: path.join(dataRoot, "daemon.json"),
     logPath: path.join(dataRoot, "mdy-daf.log")
   };
+}
+
+async function waitForStatus(
+  port: number,
+  token: string,
+  predicate: (status: { currentShiur?: { videoId?: string } | null }) => boolean
+) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const response = await fetch(`http://127.0.0.1:${port}/status`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const status = (await response.json()) as { currentShiur?: { videoId?: string } | null };
+    if (predicate(status)) {
+      return status;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  throw new Error("Timed out waiting for daemon status");
 }
 
 test("daemon rejects unauthenticated requests", async () => {
@@ -49,6 +68,48 @@ test("daemon accepts playback actions through client", async () => {
   try {
     const result = (await sendDaemonAction(paths, "pause")) as { playbackState: string };
     assert.equal(result.playbackState, "paused");
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("play action auto resolves current shiur on a clean first run", async () => {
+  const paths = tempPaths();
+  let resolveCalls = 0;
+  const daemon = await startDaemonServer(paths, 0, {
+    resolveAndStoreShiur: async (date, database) => {
+      resolveCalls += 1;
+      assert.match(date, /^\d{4}-\d{2}-\d{2}$/);
+      database.upsertVideo({
+        id: "auto-video",
+        videoId: "auto-video",
+        source: "test",
+        sourceUrl: "https://www.youtube.com/watch?v=auto-video",
+        title: "Daf Yomi Menachos Daf 99",
+        language: "english",
+        format: "full",
+        masechta: "Menachos",
+        daf: 99,
+        durationSeconds: 1800,
+        publishedAt: null,
+        confidence: 1,
+        rawMetadataJson: null
+      });
+      database.setSetting(CURRENT_SHIUR_SETTING, "auto-video");
+      return "auto-video";
+    }
+  });
+  try {
+    const result = await sendDaemonAction(paths, "play");
+    assert.equal(result.playbackState, "playing");
+
+    const status = await waitForStatus(
+      daemon.port,
+      daemon.token,
+      (candidate) => candidate.currentShiur?.videoId === "auto-video"
+    );
+    assert.equal(status.currentShiur?.videoId, "auto-video");
+    assert.equal(resolveCalls, 1);
   } finally {
     await daemon.close();
   }

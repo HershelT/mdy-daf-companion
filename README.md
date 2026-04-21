@@ -32,7 +32,18 @@ The plugin is local-first: playback uses the YouTube IFrame API, state is stored
 
 Remote/cloud Claude sessions are not supported for local playback. The plugin detects `CLAUDE_CODE_REMOTE=true` and disables daemon startup in that environment. The product no longer opens a regular browser video player; the supported playback surface is the Electron companion.
 
-## Install
+## Install From Public Marketplace
+
+After the npm package is published and this repository is on GitHub, users install with:
+
+```bash
+claude plugin marketplace add OWNER/REPO
+claude plugin install mdy-daf-companion@mdy-daf-companion
+```
+
+No setup command is required. Start Claude Code normally and submit a prompt; the plugin resolves today's Daf Yomi, opens the Electron companion, and starts playback when safe. Preferences can still be changed later with `/mdy-daf-companion:setup`.
+
+## Local Development Install
 
 Build and package the local runtime first:
 
@@ -52,7 +63,7 @@ On Windows, the package script runs a preflight that closes stale packaged `mdy-
 
 ### Option 1: Local Marketplace Install
 
-From this repository root:
+After the npm package has been published, test the marketplace from this repository root:
 
 ```bash
 claude plugin validate .
@@ -76,27 +87,32 @@ claude --plugin-dir ./mdy-daf-companion
 
 Claude Code gives local `--plugin-dir` plugins priority for that session.
 
+## Release And Updates
+
+See [docs/release-and-updates.md](docs/release-and-updates.md) for the publish workflow, current-Daf verification, and update process.
+
 ## First Run
 
-Inside Claude Code, run:
+No command is required for the default flow. The first local Claude Code prompt triggers auto-resolve and auto-open. Optional health and preference commands:
 
 ```text
+/mdy-daf-companion:status
 /mdy-daf-companion:setup
 ```
 
-For direct CLI setup:
+For direct CLI preference changes:
 
 ```bash
 mdy-daf setup --language english --format full --timezone America/Chicago --guard true --auto-open true
 ```
 
-Prepare today’s shiur:
+Optional manual resolve:
 
 ```text
 /mdy-daf-companion:prepare
 ```
 
-Open the floating companion:
+Optional manual open:
 
 ```text
 /mdy-daf-companion:play

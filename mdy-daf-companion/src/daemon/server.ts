@@ -25,6 +25,11 @@ export interface DaemonServerHandle {
   close: () => Promise<void>;
 }
 
+export interface DaemonServerOptions {
+  resolveAndStoreShiur?: (date: string, database: AppDatabase) => Promise<string>;
+  openCompanionPlayer?: typeof openCompanionPlayer;
+}
+
 interface DaemonMemoryState {
   playbackState: PlaybackState;
   lastAction: string | null;
@@ -58,7 +63,11 @@ function authorized(request: IncomingMessage, token: string): boolean {
   return request.headers.authorization === `Bearer ${token}`;
 }
 
-export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<DaemonServerHandle> {
+export async function startDaemonServer(
+  paths: RuntimePaths,
+  port = 0,
+  options: DaemonServerOptions = {}
+): Promise<DaemonServerHandle> {
   const token = createDaemonToken();
   const startedAt = nowIso();
   const memory: DaemonMemoryState = {
@@ -74,8 +83,15 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
   database.migrate();
   const config = loadConfig(paths);
   const today = () => civilDateInTimezone(new Date(), config.timezone);
+  let pendingCurrentShiurResolve: Promise<string> | null = null;
 
   async function resolveAndStoreShiur(date = today()): Promise<string> {
+    if (options.resolveAndStoreShiur) {
+      const videoId = await options.resolveAndStoreShiur(date, database);
+      memory.currentVideoId = videoId;
+      return videoId;
+    }
+
     const daf = await new HebcalDafCalendar().getDafForDate(date);
     const candidates = await createDefaultCandidateProvider(paths, database).getCandidates(daf);
     const resolved = chooseBestCandidate(daf, candidates, {
@@ -85,6 +101,17 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
     storeResolvedShiur(database, resolved);
     memory.currentVideoId = resolved.video.videoId;
     return resolved.video.videoId;
+  }
+
+  function scheduleCurrentShiurResolve(): void {
+    if (!config.autoResolveShiur || currentShiurStatus() || pendingCurrentShiurResolve) {
+      return;
+    }
+    pendingCurrentShiurResolve = resolveAndStoreShiur()
+      .catch(() => "")
+      .finally(() => {
+        pendingCurrentShiurResolve = null;
+      });
   }
 
   function currentShiurStatus() {
@@ -225,13 +252,11 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
           } else {
             markCodingActive();
             memory.playbackState = "playing";
-            if (config.autoResolveShiur && !currentShiurStatus()) {
-              void resolveAndStoreShiur().catch(() => {});
-            }
+            scheduleCurrentShiurResolve();
             if (config.autoOpenPlayer && config.openPlayerOnPrompt) {
               const address = server.address();
               if (address && typeof address !== "string") {
-                openCompanionPlayer(paths, companionUrl(address.port));
+                (options.openCompanionPlayer || openCompanionPlayer)(paths, companionUrl(address.port));
               }
             }
           }
@@ -241,9 +266,7 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
             memory.lastAction = guard.reason;
           } else {
             markCodingActive();
-            if (config.autoResolveShiur) {
-              void resolveAndStoreShiur().catch(() => {});
-            }
+            scheduleCurrentShiurResolve();
           }
         } else if (record.actionTaken === "close") {
           flushCodingSeconds();
@@ -333,6 +356,7 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
         }
         if (memory.playbackState === "playing") {
           markCodingActive();
+          scheduleCurrentShiurResolve();
         } else {
           flushCodingSeconds();
         }

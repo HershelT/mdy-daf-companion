@@ -35,7 +35,7 @@ function sendJson(response, status, value) {
 function authorized(request, token) {
     return request.headers.authorization === `Bearer ${token}`;
 }
-export async function startDaemonServer(paths, port = 0) {
+export async function startDaemonServer(paths, port = 0, options = {}) {
     const token = createDaemonToken();
     const startedAt = nowIso();
     const memory = {
@@ -50,7 +50,13 @@ export async function startDaemonServer(paths, port = 0) {
     database.migrate();
     const config = loadConfig(paths);
     const today = () => civilDateInTimezone(new Date(), config.timezone);
+    let pendingCurrentShiurResolve = null;
     async function resolveAndStoreShiur(date = today()) {
+        if (options.resolveAndStoreShiur) {
+            const videoId = await options.resolveAndStoreShiur(date, database);
+            memory.currentVideoId = videoId;
+            return videoId;
+        }
         const daf = await new HebcalDafCalendar().getDafForDate(date);
         const candidates = await createDefaultCandidateProvider(paths, database).getCandidates(daf);
         const resolved = chooseBestCandidate(daf, candidates, {
@@ -60,6 +66,16 @@ export async function startDaemonServer(paths, port = 0) {
         storeResolvedShiur(database, resolved);
         memory.currentVideoId = resolved.video.videoId;
         return resolved.video.videoId;
+    }
+    function scheduleCurrentShiurResolve() {
+        if (!config.autoResolveShiur || currentShiurStatus() || pendingCurrentShiurResolve) {
+            return;
+        }
+        pendingCurrentShiurResolve = resolveAndStoreShiur()
+            .catch(() => "")
+            .finally(() => {
+            pendingCurrentShiurResolve = null;
+        });
     }
     function currentShiurStatus() {
         const currentVideoId = memory.currentVideoId || database.getSetting(CURRENT_SHIUR_SETTING);
@@ -186,13 +202,11 @@ export async function startDaemonServer(paths, port = 0) {
                     else {
                         markCodingActive();
                         memory.playbackState = "playing";
-                        if (config.autoResolveShiur && !currentShiurStatus()) {
-                            void resolveAndStoreShiur().catch(() => { });
-                        }
+                        scheduleCurrentShiurResolve();
                         if (config.autoOpenPlayer && config.openPlayerOnPrompt) {
                             const address = server.address();
                             if (address && typeof address !== "string") {
-                                openCompanionPlayer(paths, companionUrl(address.port));
+                                (options.openCompanionPlayer || openCompanionPlayer)(paths, companionUrl(address.port));
                             }
                         }
                     }
@@ -204,9 +218,7 @@ export async function startDaemonServer(paths, port = 0) {
                     }
                     else {
                         markCodingActive();
-                        if (config.autoResolveShiur) {
-                            void resolveAndStoreShiur().catch(() => { });
-                        }
+                        scheduleCurrentShiurResolve();
                     }
                 }
                 else if (record.actionTaken === "close") {
@@ -288,6 +300,7 @@ export async function startDaemonServer(paths, port = 0) {
                 }
                 if (memory.playbackState === "playing") {
                     markCodingActive();
+                    scheduleCurrentShiurResolve();
                 }
                 else {
                     flushCodingSeconds();

@@ -1,0 +1,87 @@
+name: Release MDY Daf Companion
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to npm after verification
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+jobs:
+  package-companion:
+    name: Package ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: windows-x64
+            os: windows-latest
+            command: npm run package:companion:win
+          - label: linux-x64
+            os: ubuntu-latest
+            command: npm run package:companion:linux
+          - label: macos-universal
+            os: macos-latest
+            command: npm run package:companion:mac
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: mdy-daf-companion/package-lock.json
+      - name: Install dependencies
+        working-directory: mdy-daf-companion
+        run: npm ci
+      - name: Package companion
+        working-directory: mdy-daf-companion
+        run: ${{ matrix.command }}
+      - name: Upload companion bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: companion-${{ matrix.label }}
+          path: mdy-daf-companion/out/mdy-daf-companion-*
+          if-no-files-found: error
+
+  verify-and-publish:
+    name: Verify and publish
+    needs: package-companion
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: mdy-daf-companion/package-lock.json
+      - name: Install dependencies
+        working-directory: mdy-daf-companion
+        run: npm ci
+      - name: Download companion bundles
+        uses: actions/download-artifact@v4
+        with:
+          pattern: companion-*
+          path: mdy-daf-companion/out
+          merge-multiple: true
+      - name: Verify release package
+        working-directory: mdy-daf-companion
+        run: npm run release:prepare
+      - name: Publish to npm
+        if: ${{ inputs.publish == 'true' }}
+        working-directory: mdy-daf-companion
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm run release:publish
