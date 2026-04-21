@@ -28,7 +28,7 @@ process.stdin.on("end", () => {
         input: stdin,
         encoding: "utf8",
         env: process.env,
-        timeout: 3000
+        timeout: 10000
       }
     );
 
