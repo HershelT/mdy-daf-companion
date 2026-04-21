@@ -197,6 +197,7 @@ Current automated coverage includes hook parsing, daemon auth, Electron companio
 - [Technical Architecture](docs/technical-architecture.md)
 - [Implementation Roadmap](docs/implementation-roadmap.md)
 - [Progress Ledger](docs/progress-ledger.md)
+- [Release Validation Log](docs/release-validation-log.md)
 - [Privacy](mdy-daf-companion/PRIVACY.md)
 - [Release And Marketing](docs/release-and-marketing.md)
 - [Claude Code Surface Research](docs/research/claude-code-surface-compatibility.md)

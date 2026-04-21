@@ -52,6 +52,7 @@ Last updated: April 21, 2026.
 - Live Daf lookup for April 20, 2026 returns Menachos 99.
 - Live resolver has successfully matched April 19, 2026 Menachos 98 to `2qz8rC9Yh_k`.
 - Windows packaged companion smoke test resolved April 20, 2026 Menachos 99 to `H9vgAHT7aKo`, opened `out/mdy-daf-companion-win32-x64/mdy-daf-companion.exe`, and captured a nonblank YouTube render.
+- Real Claude Code CLI smoke with Haiku loaded the plugin through `--plugin-dir`, exposed the slash commands, and showed `SessionStart`, `UserPromptSubmit`, and `Stop` hooks returning `prepare`, `resume`, and `pause_done`.
 - Commit log was scanned for `Co-authored-by` trailers and none were present.
 
 ## Remaining Real-World Validation
