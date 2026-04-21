@@ -16,8 +16,10 @@ test("player page contains YouTube iframe API and local progress endpoint", () =
   assert.match(html, /youtube\.com\/iframe_api/);
   assert.match(html, /2qz8rC9Yh_k/);
   assert.match(html, /\/api\/progress/);
+  assert.match(html, /\/status/);
   assert.match(html, /authorization/);
   assert.match(html, /seekTo\(MDY_DAF.initialPositionSeconds/);
+  assert.match(html, /applyDesiredPlaybackState/);
   assert.match(html, /Mark watched/);
   assert.match(html, /YouTube/);
 });

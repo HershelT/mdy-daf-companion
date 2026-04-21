@@ -169,7 +169,7 @@ export function renderPlayerPage(options) {
     <header>
       <div class="title-block">
         <div class="eyebrow">Now Learning</div>
-        <h1>${title}</h1>
+        <h1 id="shiur-title">${title}</h1>
       </div>
       <span id="state">${playbackState}</span>
     </header>
@@ -185,7 +185,7 @@ export function renderPlayerPage(options) {
       <button id="forward" title="Forward 30 seconds" aria-label="Forward 30 seconds">+30</button>
       <button id="watched" title="Mark watched" aria-label="Mark watched">✓</button>
       <progress id="progress" value="${completionPercent}" max="100" aria-label="Watch progress"></progress>
-      ${sourceUrl ? `<a class="source-link" href="${sourceUrl}" target="_blank" rel="noreferrer">YouTube</a>` : ""}
+      ${sourceUrl ? `<a id="source-link" class="source-link" href="${sourceUrl}" target="_blank" rel="noreferrer">YouTube</a>` : ""}
     </footer>
   </main>
   <script>
@@ -193,8 +193,10 @@ export function renderPlayerPage(options) {
       token: "${token}",
       videoId: "${videoId}",
       initialPositionSeconds: ${initialPositionSeconds},
+      desiredPlaybackState: "${playbackState}",
       player: null,
-      lastSent: 0
+      lastSent: 0,
+      lastStatusPoll: 0
     };
   </script>
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -211,9 +213,71 @@ export function renderPlayerPage(options) {
             if (MDY_DAF.initialPositionSeconds > 0) {
               MDY_DAF.player.seekTo(MDY_DAF.initialPositionSeconds, true);
             }
+            applyDesiredPlaybackState();
           }
         }
       });
+    }
+
+    function setStateLabel(state) {
+      document.getElementById("state").textContent = state || "idle";
+    }
+
+    function updateCurrentShiur(shiur) {
+      if (!shiur) return;
+      document.getElementById("shiur-title").textContent = shiur.title || "MDY Daf Companion";
+      const sourceLink = document.getElementById("source-link");
+      if (sourceLink && shiur.sourceUrl) {
+        sourceLink.href = shiur.sourceUrl;
+      }
+      if (typeof shiur.completionPercent === "number") {
+        document.getElementById("progress").value = Math.max(0, Math.min(100, shiur.completionPercent));
+      }
+      if (shiur.videoId && shiur.videoId !== MDY_DAF.videoId) {
+        MDY_DAF.videoId = shiur.videoId;
+        MDY_DAF.initialPositionSeconds = Math.max(0, shiur.positionSeconds || 0);
+        if (MDY_DAF.player?.cueVideoById) {
+          MDY_DAF.player.cueVideoById({
+            videoId: shiur.videoId,
+            startSeconds: MDY_DAF.initialPositionSeconds
+          });
+        }
+      }
+    }
+
+    function applyDesiredPlaybackState() {
+      if (!MDY_DAF.player) return;
+      const playerState = typeof MDY_DAF.player.getPlayerState === "function"
+        ? MDY_DAF.player.getPlayerState()
+        : null;
+      if (MDY_DAF.desiredPlaybackState === "playing") {
+        if (playerState !== 1) {
+          MDY_DAF.player.playVideo?.();
+        }
+        return;
+      }
+      if (MDY_DAF.desiredPlaybackState === "paused" || MDY_DAF.desiredPlaybackState === "blocked" || MDY_DAF.desiredPlaybackState === "idle") {
+        if (playerState === 1 || playerState === 3) {
+          MDY_DAF.player.pauseVideo?.();
+          sendProgress(true);
+        }
+      }
+    }
+
+    async function pollDaemonStatus() {
+      const now = Date.now();
+      if (now - MDY_DAF.lastStatusPoll < 1500) return;
+      MDY_DAF.lastStatusPoll = now;
+      const response = await fetch("/status", {
+        headers: { authorization: "Bearer " + MDY_DAF.token }
+      }).catch(() => null);
+      if (!response?.ok) return;
+      const status = await response.json().catch(() => null);
+      if (!status?.ok) return;
+      MDY_DAF.desiredPlaybackState = status.playbackState || "idle";
+      setStateLabel(MDY_DAF.desiredPlaybackState);
+      updateCurrentShiur(status.currentShiur);
+      applyDesiredPlaybackState();
     }
 
     async function sendProgress(force = false) {
@@ -241,10 +305,14 @@ export function renderPlayerPage(options) {
     }
 
     document.getElementById("play").addEventListener("click", () => {
+      MDY_DAF.desiredPlaybackState = "playing";
+      setStateLabel("playing");
       MDY_DAF.player?.playVideo?.();
       fetch("/play", { method: "POST", headers: { authorization: "Bearer " + MDY_DAF.token } }).catch(() => {});
     });
     document.getElementById("pause").addEventListener("click", () => {
+      MDY_DAF.desiredPlaybackState = "paused";
+      setStateLabel("paused");
       MDY_DAF.player?.pauseVideo?.();
       sendProgress(true);
       fetch("/pause", { method: "POST", headers: { authorization: "Bearer " + MDY_DAF.token } }).catch(() => {});
@@ -277,6 +345,8 @@ export function renderPlayerPage(options) {
       document.getElementById("progress").value = 100;
     });
     window.setInterval(() => sendProgress(false), 5000);
+    window.setInterval(() => pollDaemonStatus(), 1500);
+    pollDaemonStatus();
     window.addEventListener("beforeunload", () => sendProgress(true));
   </script>
 </body>
