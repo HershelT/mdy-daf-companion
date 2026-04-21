@@ -46,6 +46,9 @@ test("player page renders companion shell controls", () => {
 
   assert.match(html, /class="companion"/);
   assert.match(html, /window-actions/);
+  assert.match(html, /id="close-window"/);
+  assert.match(html, /id="minimize-window"/);
+  assert.match(html, /id="pin-window"/);
   assert.match(html, /dashboard-toggle/);
   assert.match(html, /dashboard-view/);
   assert.match(html, /\/api\/dashboard/);

@@ -307,6 +307,36 @@ export function renderPlayerPage(options) {
     }
     body.companion .window-actions {
       display: flex;
+      position: absolute;
+      z-index: 32;
+      top: 8px;
+      right: 8px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 8px;
+      background: rgba(5, 7, 10, 0.54);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(12px);
+      opacity: 0.92;
+      transition: opacity 140ms ease, background 140ms ease, transform 140ms ease;
+    }
+    body.companion .window-actions:hover,
+    body.companion .window-actions:focus-within {
+      opacity: 1;
+      background: rgba(5, 7, 10, 0.78);
+      transform: translateY(1px);
+    }
+    body.companion .window-actions button {
+      min-width: 28px;
+      width: 28px;
+      height: 28px;
+      color: #FFFFFF;
+      border-color: rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.12);
+    }
+    body.companion .window-actions #close-window {
+      background: rgba(185, 28, 28, 0.76);
+      border-color: rgba(248, 113, 113, 0.56);
     }
     body.companion .video-shell {
       position: absolute;
@@ -415,12 +445,12 @@ export function renderPlayerPage(options) {
         <h1 id="shiur-title">${title}</h1>
       </div>
       <span id="state">${playbackState}</span>
-      <div class="window-actions" aria-label="Window controls">
-        <button id="pin-window" title="Toggle always on top" aria-label="Toggle always on top">▲</button>
-        <button id="minimize-window" title="Minimize" aria-label="Minimize">_</button>
-        <button id="close-window" title="Close" aria-label="Close">×</button>
-      </div>
     </header>
+    <div class="window-actions" aria-label="Window controls">
+      <button id="pin-window" title="Toggle always on top" aria-label="Toggle always on top">▲</button>
+      <button id="minimize-window" title="Minimize" aria-label="Minimize">_</button>
+      <button id="close-window" title="Close" aria-label="Close">×</button>
+    </div>
     <section class="video-shell">
       <div class="video-frame">
         ${embedUrl
