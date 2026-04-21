@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RuntimePaths } from "../core/paths.js";
 import { isClaudeRemoteEnvironment } from "../core/environment.js";
+import type { DaemonActionResult, DaemonStatus } from "./protocol.js";
 import { readDaemonState, type DaemonStateFile } from "./state.js";
 
 export class DaemonUnavailableError extends Error {
@@ -31,7 +32,7 @@ async function daemonFetch<T>(
   return json;
 }
 
-export async function readDaemonStatus(paths: RuntimePaths): Promise<unknown> {
+export async function readDaemonStatus(paths: RuntimePaths): Promise<DaemonStatus> {
   const state = readDaemonState(paths);
   if (!state) {
     throw new DaemonUnavailableError();
@@ -39,7 +40,7 @@ export async function readDaemonStatus(paths: RuntimePaths): Promise<unknown> {
   return daemonFetch(state, "/status");
 }
 
-export async function sendDaemonAction(paths: RuntimePaths, action: string): Promise<unknown> {
+export async function sendDaemonAction(paths: RuntimePaths, action: string): Promise<DaemonActionResult> {
   const state = readDaemonState(paths);
   if (!state) {
     throw new DaemonUnavailableError();

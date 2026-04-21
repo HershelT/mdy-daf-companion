@@ -100,17 +100,19 @@ async function main() {
         case "open-player": {
             const paths = resolveRuntimePaths();
             await startDaemonProcess(paths);
+            const playback = await sendDaemonAction(paths, "play");
             const url = await getCompanionPlayerUrl(paths);
             const result = openCompanionPlayer(paths, url);
-            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, ...result })}\n`);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, playbackState: playback.playbackState, ...result })}\n`);
             return;
         }
         case "open-companion": {
             const paths = resolveRuntimePaths();
             await startDaemonProcess(paths);
+            const playback = await sendDaemonAction(paths, "play");
             const url = await getCompanionPlayerUrl(paths);
             const result = openCompanionPlayer(paths, url);
-            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, ...result })}\n`);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, playbackState: playback.playbackState, ...result })}\n`);
             return;
         }
         case "open-dashboard": {

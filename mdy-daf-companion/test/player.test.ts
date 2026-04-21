@@ -49,6 +49,9 @@ test("player page renders companion shell controls", () => {
   assert.match(html, /id="close-window"/);
   assert.match(html, /id="minimize-window"/);
   assert.match(html, /id="pin-window"/);
+  assert.match(html, /body\.companion:hover \.window-actions/);
+  assert.match(html, /pointer-events: none/);
+  assert.match(html, /@media \(hover: none\)/);
   assert.match(html, /dashboard-toggle/);
   assert.match(html, /dashboard-view/);
   assert.match(html, /\/api\/dashboard/);
@@ -65,4 +68,7 @@ test("playing companion page requests YouTube autoplay", () => {
   });
 
   assert.match(html, /autoplay=1/);
+  assert.match(html, /autoplay: MDY_DAF\.desiredPlaybackState === "playing" \? 1 : 0/);
+  assert.match(html, /schedulePlaybackSync/);
+  assert.match(html, /loadVideoById/);
 });

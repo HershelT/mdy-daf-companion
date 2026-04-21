@@ -107,17 +107,19 @@ Claude Code fires lifecycle hooks. MDY Daf Companion maps those events to daemon
 | `PreCompact` / `PostCompact` | Flush state. |
 | `SessionEnd` | Pause/flush state. |
 
-The companion intentionally stays open when Claude stops. Best practice here is to pause, save, and leave the learner in control. Auto-closing would interrupt someone who wants to keep watching, and it would make the window jump in and out during normal Claude turns. Use the visible top-right `X` to close it, `_` to minimize, or the pin control to toggle always-on-top.
+The companion intentionally stays open when Claude stops. Best practice here is to pause, save, and leave the learner in control. Auto-closing would interrupt someone who wants to keep watching, and it would make the window jump in and out during normal Claude turns. Hover or focus the window to reveal the top-right `X`, `_`, and pin controls.
 
 ## Window Behavior
 
 - The video fills the companion window.
 - The companion can be dragged by the top overlay area.
-- Pin, minimize, and close controls are always available in the top-right corner.
-- Playback controls appear as an overlay while hovering or focusing the window.
+- Pin, minimize, and close controls appear in the top-right corner while hovering or focusing the window. They stay visible on touch/no-hover displays.
+- Playback controls appear as a bottom overlay while hovering or focusing the window.
 - The `Stats` button switches the same Electron companion into the dashboard view.
 - Window size, position, and always-on-top state are saved locally.
 - Closing the companion does not stop the daemon. The next prompt or `/play` can reopen it.
+
+`mdy-daf open-player`, `/play`, and the Claude `UserPromptSubmit` hook all request playback before opening or refocusing the companion. The Electron shell allows autoplay and the YouTube iframe is created with autoplay enabled when daemon state is `playing`. If YouTube still requires a one-time user gesture on a particular machine, click the YouTube play overlay once; subsequent daemon play/pause calls continue from saved progress.
 
 ## Commands
 
@@ -128,7 +130,7 @@ The companion intentionally stays open when Claude stops. Best practice here is 
 | `mdy-daf today` | Print the Daf Yomi for a date. |
 | `mdy-daf resolve` | Resolve a date to the best MDY video candidate. |
 | `mdy-daf prepare` | Resolve and store the current shiur. |
-| `mdy-daf open-player` | Start daemon and open the floating Electron companion. |
+| `mdy-daf open-player` | Start daemon, request playback, and open the floating Electron companion. |
 | `mdy-daf open-dashboard` | Open the same Electron companion directly to Stats. |
 | `mdy-daf play` / `resume` | Set daemon playback state to playing. |
 | `mdy-daf pause` | Pause and save progress. |

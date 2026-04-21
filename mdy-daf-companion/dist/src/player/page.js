@@ -317,14 +317,24 @@ export function renderPlayerPage(options) {
       background: rgba(5, 7, 10, 0.54);
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
       backdrop-filter: blur(12px);
-      opacity: 0.92;
+      opacity: 0;
+      pointer-events: none;
       transition: opacity 140ms ease, background 140ms ease, transform 140ms ease;
     }
+    body.companion:hover .window-actions,
+    body.companion:focus-within .window-actions,
     body.companion .window-actions:hover,
     body.companion .window-actions:focus-within {
       opacity: 1;
+      pointer-events: auto;
       background: rgba(5, 7, 10, 0.78);
       transform: translateY(1px);
+    }
+    @media (hover: none) {
+      body.companion .window-actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
     }
     body.companion .window-actions button {
       min-width: 28px;
@@ -499,7 +509,12 @@ export function renderPlayerPage(options) {
       if (!MDY_DAF.videoId) return;
       MDY_DAF.player = new YT.Player("player", {
         videoId: MDY_DAF.videoId,
-        playerVars: { rel: 0, modestbranding: 1 },
+        playerVars: {
+          autoplay: MDY_DAF.desiredPlaybackState === "playing" ? 1 : 0,
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1
+        },
         events: {
           onStateChange: () => sendProgress()
           ,
@@ -507,7 +522,7 @@ export function renderPlayerPage(options) {
             if (MDY_DAF.initialPositionSeconds > 0) {
               MDY_DAF.player.seekTo(MDY_DAF.initialPositionSeconds, true);
             }
-            applyDesiredPlaybackState();
+            schedulePlaybackSync();
           }
         }
       });
@@ -526,13 +541,24 @@ export function renderPlayerPage(options) {
       if (shiur.videoId && shiur.videoId !== MDY_DAF.videoId) {
         MDY_DAF.videoId = shiur.videoId;
         MDY_DAF.initialPositionSeconds = Math.max(0, shiur.positionSeconds || 0);
-        if (MDY_DAF.player?.cueVideoById) {
-          MDY_DAF.player.cueVideoById({
+        const loadMethod = MDY_DAF.desiredPlaybackState === "playing" && MDY_DAF.player?.loadVideoById
+          ? "loadVideoById"
+          : "cueVideoById";
+        if (MDY_DAF.player?.[loadMethod]) {
+          MDY_DAF.player[loadMethod]({
             videoId: shiur.videoId,
             startSeconds: MDY_DAF.initialPositionSeconds
           });
+          schedulePlaybackSync();
         }
       }
+    }
+
+    function schedulePlaybackSync() {
+      applyDesiredPlaybackState();
+      window.setTimeout(applyDesiredPlaybackState, 400);
+      window.setTimeout(applyDesiredPlaybackState, 1200);
+      window.setTimeout(applyDesiredPlaybackState, 2500);
     }
 
     function applyDesiredPlaybackState() {
