@@ -4,7 +4,6 @@ export interface PlayerPageOptions {
   token: string;
   videoId: string | null;
   title?: string | null;
-  sourceUrl?: string | null;
   initialPositionSeconds?: number;
   completionPercent?: number;
   playbackState: PlaybackState;
@@ -15,7 +14,6 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
   const rawVideoId = options.videoId || "";
   const videoId = escapeHtml(rawVideoId);
   const title = escapeHtml(options.title || "MDY Daf Companion");
-  const sourceUrl = escapeHtml(options.sourceUrl || "");
   const token = escapeHtml(options.token);
   const playbackState = escapeHtml(options.playbackState);
   const initialPositionSeconds = Math.max(0, options.initialPositionSeconds || 0);
@@ -168,10 +166,20 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
     }
     .dashboard-card {
       border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.1);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.08));
       border-radius: 8px;
       padding: 12px;
       min-width: 0;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    }
+    .dashboard-card[data-accent="green"] {
+      border-top: 3px solid #19A974;
+    }
+    .dashboard-card[data-accent="blue"] {
+      border-top: 3px solid #60A5FA;
+    }
+    .dashboard-card[data-accent="gold"] {
+      border-top: 3px solid #D6A23A;
     }
     .dashboard-label {
       color: rgba(255, 255, 255, 0.7);
@@ -182,14 +190,34 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
     .dashboard-value {
       margin-top: 4px;
       color: #FFFFFF;
-      font-size: 24px;
+      font-size: 22px;
       line-height: 1;
       font-weight: 850;
+    }
+    .dashboard-caption {
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.64);
+      font-size: 11px;
+      line-height: 1.3;
     }
     .dashboard-title {
       overflow-wrap: anywhere;
       line-height: 1.25;
       font-weight: 800;
+    }
+    .dashboard-progress {
+      width: 100%;
+      height: 7px;
+      margin-top: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .dashboard-progress span {
+      display: block;
+      height: 100%;
+      width: var(--pct, 0%);
+      background: linear-gradient(90deg, #19A974, #60A5FA);
     }
     button {
       min-width: 42px;
@@ -221,12 +249,6 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       min-width: 180px;
       height: 12px;
       accent-color: var(--green);
-    }
-    .source-link {
-      white-space: nowrap;
-      color: var(--blue);
-      font-weight: 750;
-      text-decoration: none;
     }
     @media (max-width: 720px) {
       header {
@@ -378,10 +400,6 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       width: 100%;
       height: 9px;
     }
-    body.companion .source-link {
-      color: #FFFFFF;
-      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
-    }
     body.companion:hover header,
     body.companion:hover footer,
     body.companion:focus-within header,
@@ -447,7 +465,6 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       <button id="watched" title="Mark watched" aria-label="Mark watched">✓</button>
       <button id="dashboard-toggle" title="Show stats" aria-label="Show stats">Stats</button>
       <progress id="progress" value="${completionPercent}" max="100" aria-label="Watch progress"></progress>
-      ${sourceUrl ? `<a id="source-link" class="source-link" href="${sourceUrl}" target="_blank" rel="noreferrer">YouTube</a>` : ""}
     </footer>
   </main>
   <script>
@@ -488,10 +505,6 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
     function updateCurrentShiur(shiur) {
       if (!shiur) return;
       document.getElementById("shiur-title").textContent = shiur.title || "MDY Daf Companion";
-      const sourceLink = document.getElementById("source-link");
-      if (sourceLink && shiur.sourceUrl) {
-        sourceLink.href = shiur.sourceUrl;
-      }
       if (typeof shiur.completionPercent === "number") {
         document.getElementById("progress").value = Math.max(0, Math.min(100, shiur.completionPercent));
       }
@@ -550,11 +563,17 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       return node;
     }
 
-    function statCard(label, value) {
+    function statCard(label, value, caption, accent) {
       const card = document.createElement("article");
       card.className = "dashboard-card";
+      if (accent) {
+        card.dataset.accent = accent;
+      }
       addText(card, "dashboard-label", label);
       addText(card, "dashboard-value", value);
+      if (caption) {
+        addText(card, "dashboard-caption", caption);
+      }
       return card;
     }
 
@@ -564,15 +583,27 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       content.textContent = "";
       const current = document.createElement("article");
       current.className = "dashboard-card current";
+      current.dataset.accent = "green";
       addText(current, "dashboard-label", "Current Shiur");
       addText(current, "dashboard-title", data?.currentShiur?.title || "No shiur prepared");
+      const pct = Math.max(0, Math.min(100, data?.currentShiur?.completionPercent || 0));
+      const progress = document.createElement("div");
+      progress.className = "dashboard-progress";
+      const progressFill = document.createElement("span");
+      progressFill.style.setProperty("--pct", pct + "%");
+      progress.appendChild(progressFill);
+      current.appendChild(progress);
+      addText(current, "dashboard-caption", Math.round(pct) + "% watched");
       content.appendChild(current);
       const today = data?.stats?.today || {};
       const week = data?.stats?.week || {};
-      content.appendChild(statCard("Watched Today", (today.watchedMinutes || 0) + "m"));
-      content.appendChild(statCard("Coding Today", (today.codingMinutes || 0) + "m"));
-      content.appendChild(statCard("Week Watched", (week.watchedMinutes || 0) + "m"));
-      content.appendChild(statCard("Dafim Done", String(week.dafimCompleted || 0)));
+      const ratio = typeof today.watchToCodingRatio === "number"
+        ? Math.round(today.watchToCodingRatio * 100) + "%"
+        : "n/a";
+      content.appendChild(statCard("Watched Today", (today.watchedMinutes || 0) + "m", "learning time", "green"));
+      content.appendChild(statCard("Coding Today", (today.codingMinutes || 0) + "m", "Claude active time", "blue"));
+      content.appendChild(statCard("Watch Ratio", ratio, "watched vs coding", "gold"));
+      content.appendChild(statCard("Dafim Done", String(week.dafimCompleted || 0), "this week", "green"));
     }
 
     async function loadDashboard() {

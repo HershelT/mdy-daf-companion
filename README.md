@@ -18,7 +18,7 @@ The plugin is local-first: playback uses the YouTube IFrame API, state is stored
 - Automatically maps Claude lifecycle hooks to play/pause/prepare behavior.
 - Saves playback progress and resumes from the last position.
 - Tracks watched minutes, coding minutes, completion counts, and watch/coding ratio.
-- Provides stats inside the Electron companion, with a token-protected dashboard URL for diagnostics.
+- Provides stats inside the Electron companion.
 - Includes Shabbos guard and a Hebcal Yom Tov guard adapter.
 - Supports Claude Code CLI local sessions, Claude Desktop local sessions, and local VS Code extension sessions.
 

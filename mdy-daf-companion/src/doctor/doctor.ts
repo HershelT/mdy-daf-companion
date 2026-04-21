@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { isClaudeRemoteEnvironment, isProbablySshEnvironment } from "../core/environment.js";
 import { resolveRuntimePaths } from "../core/paths.js";
+import { getCompanionCommand } from "../player/companionLauncher.js";
 import { AppDatabase } from "../storage/database.js";
 
 export type DoctorStatus = "pass" | "warn" | "fail";
@@ -49,6 +50,16 @@ export function runDoctor(): DoctorReport {
       "Cross-platform CLI wrappers are present"
     )
   );
+  const companionCommand = getCompanionCommand(paths);
+  checks.push({
+    name: "electron-companion",
+    status: companionCommand ? "pass" : "fail",
+    detail: companionCommand
+      ? companionCommand.packaged
+        ? `Packaged companion found at ${companionCommand.command}`
+        : `Development Electron runtime found at ${companionCommand.command}`
+      : "No packaged companion or development Electron runtime found"
+  });
 
   try {
     fs.mkdirSync(paths.dataRoot, { recursive: true });

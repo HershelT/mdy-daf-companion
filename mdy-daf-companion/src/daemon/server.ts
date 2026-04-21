@@ -9,7 +9,6 @@ import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import type { DaemonActionResult, DaemonStatus, PlaybackState } from "./protocol.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
 import { renderPlayerPage } from "../player/page.js";
-import { renderDashboardPage } from "../dashboard/page.js";
 import { openCompanionPlayer } from "../player/companionLauncher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
 import { chooseBestCandidate } from "../resolver/scoring.js";
@@ -180,28 +179,10 @@ export async function startDaemonServer(paths: RuntimePaths, port = 0): Promise<
             token,
             videoId: memory.currentVideoId,
             title: currentShiurStatus()?.title,
-            sourceUrl: currentShiurStatus()?.sourceUrl,
             initialPositionSeconds: currentShiurStatus()?.positionSeconds,
             completionPercent: currentShiurStatus()?.completionPercent,
             playbackState: memory.playbackState,
             companionMode: true
-          })
-        );
-        return;
-      }
-
-      if (request.method === "GET" && url.pathname === "/dashboard") {
-        const snapshot = dashboardSnapshot();
-        response.writeHead(200, {
-          "content-type": "text/html; charset=utf-8",
-          "cache-control": "no-store"
-        });
-        response.end(
-          renderDashboardPage({
-            token,
-            playbackState: snapshot.playbackState,
-            currentShiur: snapshot.currentShiur,
-            stats: snapshot.stats
           })
         );
         return;

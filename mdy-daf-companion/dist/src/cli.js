@@ -2,7 +2,7 @@
 import { ingestHookEvent } from "./hooks/ingest.js";
 import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
-import { getCompanionPlayerUrl, getDashboardUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { getCompanionPlayerUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { openCompanionPlayer } from "./player/companionLauncher.js";
@@ -95,11 +95,6 @@ async function main() {
         case "companion-url": {
             await startDaemonProcess(resolveRuntimePaths());
             process.stdout.write(`${await getCompanionPlayerUrl(resolveRuntimePaths())}\n`);
-            return;
-        }
-        case "dashboard-url": {
-            await startDaemonProcess(resolveRuntimePaths());
-            process.stdout.write(`${await getDashboardUrl(resolveRuntimePaths())}\n`);
             return;
         }
         case "open-player": {

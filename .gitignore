@@ -16,3 +16,4 @@ Thumbs.db
 output/
 mdy-daf-companion/.playwright-cli/
 mdy-daf-companion/output/
+mdy-daf-companion/out/

@@ -90,7 +90,7 @@ mdy-daf open-player
 mdy-daf open-dashboard
 ```
 
-`mdy-daf open-dashboard` opens the same Electron companion directly to the Stats view. A token-protected diagnostic URL is still available through `mdy-daf dashboard-url`.
+`mdy-daf open-dashboard` opens the same Electron companion directly to the Stats view. There is no separate browser dashboard in the release path.
 
 Expected resolver sanity check:
 

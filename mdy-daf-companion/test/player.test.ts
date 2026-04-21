@@ -7,7 +7,6 @@ test("player page contains YouTube iframe API and local progress endpoint", () =
     token: "test-token",
     videoId: "2qz8rC9Yh_k",
     title: "Daf Yomi Menachos Daf 98",
-    sourceUrl: "https://www.youtube.com/watch?v=2qz8rC9Yh_k",
     initialPositionSeconds: 120,
     completionPercent: 25,
     playbackState: "paused"

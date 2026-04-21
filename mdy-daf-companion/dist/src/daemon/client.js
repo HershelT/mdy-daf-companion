@@ -51,13 +51,6 @@ export async function getCompanionPlayerUrl(paths) {
     }
     return `http://${state.host}:${state.port}/companion?token=${encodeURIComponent(state.token)}`;
 }
-export async function getDashboardUrl(paths) {
-    const state = readDaemonState(paths);
-    if (!state) {
-        throw new DaemonUnavailableError();
-    }
-    return `http://${state.host}:${state.port}/dashboard?token=${encodeURIComponent(state.token)}`;
-}
 export async function sendHookToDaemon(paths, fallbackEvent, body) {
     const state = readDaemonState(paths);
     if (!state) {

@@ -17,9 +17,42 @@ export function getCompanionCommand(paths, platform = process.platform, env = pr
     if (override) {
         return fs.existsSync(override) ? { command: override, args: [appPath, "--"] } : null;
     }
+    const packaged = getPackagedCompanionExecutable(paths, platform, process.arch);
+    if (packaged) {
+        return { command: packaged, args: ["--"], packaged: true };
+    }
     const localCli = path.join(paths.pluginRoot, "node_modules", "electron", "cli.js");
     if (fs.existsSync(localCli)) {
         return { command: process.execPath, args: [localCli, appPath, "--"] };
+    }
+    return null;
+}
+export function getPackagedCompanionExecutable(paths, platform = process.platform, arch = process.arch) {
+    const appDisplayName = "MDY Daf Companion";
+    const appPackageName = "mdy-daf-companion";
+    const platformFolders = [
+        `${appPackageName}-${platform}-${arch}`,
+        `${appDisplayName}-${platform}-${arch}`
+    ];
+    const outRoot = path.join(paths.pluginRoot, "out");
+    const candidates = platformFolders.flatMap((platformFolder) => platform === "win32"
+        ? [
+            path.join(outRoot, platformFolder, `${appPackageName}.exe`),
+            path.join(outRoot, platformFolder, `${appDisplayName}.exe`)
+        ]
+        : platform === "darwin"
+            ? [
+                path.join(outRoot, platformFolder, `${appPackageName}.app`, "Contents", "MacOS", appPackageName),
+                path.join(outRoot, platformFolder, `${appDisplayName}.app`, "Contents", "MacOS", appDisplayName)
+            ]
+            : [
+                path.join(outRoot, platformFolder, appPackageName),
+                path.join(outRoot, platformFolder, appDisplayName)
+            ]);
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
     }
     return null;
 }
@@ -30,7 +63,7 @@ export function openCompanionPlayer(paths, playerUrl) {
         return {
             surface: "companion",
             opened: false,
-            reason: "Electron runtime was not found. Run npm install in the plugin directory or package the companion app before launch."
+            reason: "Electron companion was not found. Run npm run package:companion for release builds, or npm install for local development."
         };
     }
     const child = spawn(command.command, [...command.args, "--url", url, "--data-root", paths.dataRoot], {

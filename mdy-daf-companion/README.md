@@ -12,7 +12,7 @@ This plugin is independent and is not affiliated with or endorsed by Mercaz Daf 
 - Pauses when Claude Code stops, asks for permission, idles, or ends the session.
 - Resumes from saved progress.
 - Tracks watched minutes, coding minutes, dafim completed, and watch/coding ratio.
-- Shows stats inside the Electron companion and serves a token-protected dashboard URL for diagnostics.
+- Shows stats inside the Electron companion.
 - Keeps stats local by default.
 
 ## Quick Start

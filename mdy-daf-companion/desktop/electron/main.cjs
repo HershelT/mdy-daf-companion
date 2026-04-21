@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 
@@ -55,6 +55,8 @@ process.on("uncaughtException", (error) => {
 process.on("unhandledRejection", (error) => {
   log("unhandledRejection", error);
 });
+
+log(`main-start argv=${JSON.stringify(process.argv)}`);
 
 function readWindowState() {
   try {
@@ -135,7 +137,7 @@ function createWindow() {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    log(`blocked external window url=${url}`);
     return { action: "deny" };
   });
 
@@ -173,7 +175,7 @@ function createWindow() {
     const targetOrigin = targetUrl ? new URL(targetUrl).origin : null;
     if (currentOrigin && targetOrigin && currentOrigin !== targetOrigin) {
       event.preventDefault();
-      shell.openExternal(targetUrl);
+      log(`blocked external navigation url=${targetUrl}`);
     }
   });
 
