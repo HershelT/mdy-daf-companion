@@ -14,6 +14,7 @@ Resolution order:
 4. Use official MDY YouTube channel metadata when needed.
 5. Do not choose the newest upload blindly. Match daf, language, and format.
 6. If confidence is low, say what is uncertain and offer the top candidates.
+7. Prefer official/public metadata sources and cached results before brittle scraping.
 
 Never download, mirror, or redistribute the video.
-
+Do not imply this plugin is official MDY software unless a partnership is documented.

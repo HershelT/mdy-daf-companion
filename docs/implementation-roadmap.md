@@ -38,13 +38,15 @@ Exit status: complete, with the caveat that YouTube/MDY source surfaces can chan
 
 ## Phase 4: Player
 
-- Completed: Build local player page.
+- Completed: Build floating Electron companion page.
 - Completed: Embed YouTube IFrame API.
 - Completed: Implement play, pause, seek, progress events.
 - Completed: Persist position.
-- Completed: Add window launch strategy.
+- Completed: Add packaged Electron window launch strategy.
 - Completed: Add manual controls.
-- Completed: Add mark-watched and YouTube source link.
+- Completed: Add mark-watched control.
+- Completed: Remove regular browser player and browser fallback behavior.
+- Completed: Block external Electron navigations instead of opening a browser.
 
 Exit status: complete enough for beta.
 
@@ -65,7 +67,7 @@ Exit status: beta-ready; full Yom Tov daemon blocking should be deepened after b
 - Partial: Implement coding session segments.
 - Completed: Materialize daily stats.
 - Completed: Add stats commands.
-- Completed: Add dashboard stats.
+- Completed: Add in-companion Stats dashboard.
 - Pending: Add full catch-up queue.
 
 Exit status: useful local stats implemented; catch-up planning remains a product enhancement.
@@ -84,6 +86,7 @@ Exit status: beta-ready.
 ## Phase 8: Release
 
 - Completed: Cross-platform packaging wrappers.
+- Completed: Electron Packager release scripts and Windows packaged companion smoke.
 - Completed: Plugin user configuration.
 - Partial: Marketplace metadata.
 - Completed: Versioning and changelog.
@@ -92,4 +95,3 @@ Exit status: beta-ready.
 - Pending: Optional MDY partnership outreach.
 
 Exit status: local beta release candidate.
-

@@ -13,4 +13,5 @@ Guidelines:
 3. Do not shame missed days.
 4. Do not expose raw project paths, prompt text, source code, or transcript content.
 5. When data is missing, say what needs to be tracked before the stat can be calculated.
-
+6. Treat all stats as local-only unless the user has explicitly opted into a future sync/telemetry feature.
+7. Avoid inferring private project details from timing data.

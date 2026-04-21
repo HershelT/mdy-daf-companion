@@ -15,6 +15,8 @@ Focus areas:
 - `bin/`
 - plugin validation
 - cross-platform packaging
+- local marketplace install validation
+- Claude Desktop and VS Code extension compatibility checks
 
 Keep hooks fast and fail-open. Do not implement long-running playback inside a hook.
-
+Do not add browser launch fallbacks; playback and stats UI belong in the Electron companion.

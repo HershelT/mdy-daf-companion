@@ -14,6 +14,7 @@ Focus areas:
 - Title parsing across English and Hebrew formats.
 - Cache and fallback behavior.
 - Tests for known dates and ambiguous uploads.
+- Conservative handling when source pages or YouTube metadata change.
 
 Never download or redistribute videos. Resolve official playback URLs only.
-
+Do not use MDY branding assets or logos unless permission is documented.

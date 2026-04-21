@@ -27,6 +27,21 @@ npm run package:companion:linux   # Linux x64
 npm run check
 ```
 
+Install into Claude Code from the repository root:
+
+```bash
+cd ..
+claude plugin validate .
+claude plugin marketplace add . --scope local
+claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
+```
+
+For one-session development testing without marketplace install:
+
+```bash
+claude --plugin-dir ./mdy-daf-companion
+```
+
 After installation, run these inside Claude Code:
 
 ```text
@@ -104,6 +119,8 @@ Unsupported:
 - Claude Desktop remote/cloud sessions.
 - Claude Code web/cloud sessions for local playback.
 
+Detailed hands-on validation steps for Desktop and VS Code are in [DESKTOP_AND_VSCODE_VALIDATION.md](DESKTOP_AND_VSCODE_VALIDATION.md).
+
 ## Development
 
 ```bash
@@ -118,3 +135,8 @@ npm run check
 ## Privacy
 
 See [PRIVACY.md](PRIVACY.md). Default behavior is local-only and does not store prompt text, source code, transcript content, file contents, or raw tool inputs.
+
+## Security And Support
+
+- [SECURITY.md](SECURITY.md)
+- [SUPPORT.md](SUPPORT.md)

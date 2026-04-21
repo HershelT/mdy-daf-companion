@@ -43,7 +43,7 @@ MDY Daf Companion turns Claude Code work sessions into steady Daf Yomi time by a
    - Shabbos/Yom Tov guard: enabled, local timezone.
 3. Claude Code starts or resumes a session.
 4. Plugin resolves today's daf and best matching MDY video.
-5. Plugin opens a small player window or reuses an existing one.
+5. Plugin opens the floating Electron companion or reuses an existing one.
 6. While Claude is working, video plays.
 7. When Claude stops or asks the user for input, video pauses and progress is saved.
 8. When the user prompts Claude again, playback resumes from the saved position.
@@ -114,7 +114,7 @@ User-facing stats views:
 - `/mdy-daf-companion:stats week`
 - `/mdy-daf-companion:stats cycle`
 - Status line segment.
-- Local dashboard page.
+- Stats view inside the floating Electron companion.
 
 ### Privacy
 
@@ -168,10 +168,11 @@ The commands should talk to the local daemon through the CLI. If the daemon is n
 Player requirements:
 
 - Use official YouTube embed/IFrame API.
-- Small window with current daf title, progress, chapters if available, and controls.
+- Floating Electron companion with video-first layout, current daf title, progress, and hover controls.
 - Do not obscure the user's editor.
 - Persist window position and size.
-- Support compact, full, and hidden audio-only-style window modes, subject to YouTube terms.
+- Support compact and expanded companion modes, subject to YouTube terms.
+- Do not ship a regular browser player or browser dashboard fallback.
 - Show source confidence and fallback warnings in settings, not as noisy daily UI.
 
 ### Onboarding
@@ -199,7 +200,7 @@ Free core:
 
 Supporter tier or paid add-on ideas:
 
-- Beautiful dashboard and advanced analytics.
+- Beautiful in-companion dashboard and advanced analytics.
 - Multi-device sync.
 - Calendar and catch-up planning.
 - Custom learning goals.
@@ -232,8 +233,7 @@ Local-only personal metrics:
 ## Open Questions
 
 - Does MDY have a stable public metadata endpoint that can be used with permission?
-- Should the plugin open the official MDY app page instead of a local YouTube player when metadata is available?
+- Should the plugin link to the official MDY app page from settings/help when metadata is available, without changing the Electron-only playback surface?
 - What is the correct legal/commercial posture if monetizing a companion for free YouTube shiurim?
 - Should the product seek MDY permission or partnership before public launch?
 - What exact Claude Code plugin `userConfig` schema is current at release time?
-
