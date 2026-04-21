@@ -45,7 +45,8 @@ export function formatSetupSummary(config) {
         `timezone=${config.timezone}`,
         `guard=${config.shabbosYomTovGuard}`,
         `autoOpen=${config.autoOpenPlayer}`,
-        `autoResolve=${config.autoResolveShiur}`
+        `autoResolve=${config.autoResolveShiur}`,
+        "player=electron-companion"
     ].join(" | ");
 }
 function setString(args, name, setter) {

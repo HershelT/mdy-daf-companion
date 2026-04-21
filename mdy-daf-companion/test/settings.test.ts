@@ -27,6 +27,7 @@ test("applySetupOptions writes first-run preferences", () => {
     assert.equal(config.format, "chazarah");
     assert.equal(config.autoOpenPlayer, false);
     assert.match(formatSetupSummary(config), /language=hebrew/);
+    assert.match(formatSetupSummary(config), /player=electron-companion/);
   } finally {
     if (previous === undefined) {
       delete process.env.CLAUDE_PLUGIN_DATA;
@@ -39,4 +40,3 @@ test("applySetupOptions writes first-run preferences", () => {
 test("applySetupOptions rejects invalid booleans", () => {
   assert.throws(() => applySetupOptions(["--guard", "maybe"]), /true or false/);
 });
-

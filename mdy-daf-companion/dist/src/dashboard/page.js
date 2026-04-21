@@ -164,7 +164,7 @@ export function renderDashboardPage(options) {
         <h1>MDY Daf Companion</h1>
         <span class="status-pill">Playback ${escapeHtml(options.playbackState)}</span>
       </div>
-      <a class="button" href="/player?token=${encodeURIComponent(options.token)}">Open Player</a>
+      <a class="button" href="/companion?token=${encodeURIComponent(options.token)}">Open Companion</a>
     </header>
 
     <section class="layout">

@@ -49,7 +49,8 @@ test("pluginEnvConfig reads Claude plugin userConfig environment variables", () 
       CLAUDE_PLUGIN_OPTION_language: "hebrew",
       CLAUDE_PLUGIN_OPTION_format: "chazarah",
       CLAUDE_PLUGIN_OPTION_timezone: "Asia/Jerusalem",
-      CLAUDE_PLUGIN_OPTION_auto_open_player: "false"
+      CLAUDE_PLUGIN_OPTION_auto_open_player: "false",
+      CLAUDE_PLUGIN_OPTION_player_surface: "browser"
     }),
     {
       language: "hebrew",
@@ -58,4 +59,15 @@ test("pluginEnvConfig reads Claude plugin userConfig environment variables", () 
       autoOpenPlayer: false
     }
   );
+});
+
+test("loadConfig drops legacy browser surface settings", () => {
+  const paths = tempPaths();
+  fs.writeFileSync(
+    paths.configPath,
+    `${JSON.stringify({ ...defaultConfig, playerSurface: "browser" }, null, 2)}\n`,
+    "utf8"
+  );
+
+  assert.equal("playerSurface" in loadConfig(paths), false);
 });

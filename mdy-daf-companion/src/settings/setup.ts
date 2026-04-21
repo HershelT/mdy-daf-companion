@@ -56,7 +56,8 @@ export function formatSetupSummary(config: AppConfig): string {
     `timezone=${config.timezone}`,
     `guard=${config.shabbosYomTovGuard}`,
     `autoOpen=${config.autoOpenPlayer}`,
-    `autoResolve=${config.autoResolveShiur}`
+    `autoResolve=${config.autoResolveShiur}`,
+    "player=electron-companion"
   ].join(" | ");
 }
 
@@ -81,4 +82,3 @@ function setBoolean(args: string[], name: string, setter: (value: boolean) => vo
     setter(value === "true");
   }
 }
-

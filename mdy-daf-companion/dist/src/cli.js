@@ -2,10 +2,10 @@
 import { ingestHookEvent } from "./hooks/ingest.js";
 import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
-import { getDashboardUrl, getPlayerUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { getCompanionPlayerUrl, getDashboardUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
-import { openUrl } from "./player/launcher.js";
+import { openCompanionPlayer } from "./player/companionLauncher.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
 import { createDefaultCandidateProvider } from "./resolver/defaultProvider.js";
 import { chooseBestCandidate } from "./resolver/scoring.js";
@@ -92,9 +92,9 @@ async function main() {
             process.stdout.write(`${JSON.stringify(result)}\n`);
             return;
         }
-        case "player-url": {
+        case "companion-url": {
             await startDaemonProcess(resolveRuntimePaths());
-            process.stdout.write(`${await getPlayerUrl(resolveRuntimePaths())}\n`);
+            process.stdout.write(`${await getCompanionPlayerUrl(resolveRuntimePaths())}\n`);
             return;
         }
         case "dashboard-url": {
@@ -103,17 +103,27 @@ async function main() {
             return;
         }
         case "open-player": {
-            await startDaemonProcess(resolveRuntimePaths());
-            const url = await getPlayerUrl(resolveRuntimePaths());
-            openUrl(url);
-            process.stdout.write(`${url}\n`);
+            const paths = resolveRuntimePaths();
+            await startDaemonProcess(paths);
+            const url = await getCompanionPlayerUrl(paths);
+            const result = openCompanionPlayer(paths, url);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, ...result })}\n`);
+            return;
+        }
+        case "open-companion": {
+            const paths = resolveRuntimePaths();
+            await startDaemonProcess(paths);
+            const url = await getCompanionPlayerUrl(paths);
+            const result = openCompanionPlayer(paths, url);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, ...result })}\n`);
             return;
         }
         case "open-dashboard": {
-            await startDaemonProcess(resolveRuntimePaths());
-            const url = await getDashboardUrl(resolveRuntimePaths());
-            openUrl(url);
-            process.stdout.write(`${url}\n`);
+            const paths = resolveRuntimePaths();
+            await startDaemonProcess(paths);
+            const url = `${await getCompanionPlayerUrl(paths)}#stats`;
+            const result = openCompanionPlayer(paths, url);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, ...result })}\n`);
             return;
         }
         case "stats": {

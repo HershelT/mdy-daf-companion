@@ -12,19 +12,19 @@ Primary sources:
 
 ## Executive Summary
 
-MDY Daf Companion should work best in local Claude Code sessions: CLI, Desktop local sessions, and VS Code local sessions. It should not be expected to work in Desktop remote/cloud sessions because official Desktop docs say plugins are not available for remote sessions. SSH sessions and dev-container style sessions need a different player strategy because the plugin runs on the remote machine, while the user wants video on their local desktop.
+MDY Daf Companion should work best in local Claude Code sessions: CLI, Desktop local sessions, and VS Code local sessions. It should not be expected to work in Desktop remote/cloud sessions because official Desktop docs say plugins are not available for remote sessions. SSH sessions and dev-container style sessions need a different player strategy because the plugin runs on the remote machine, while the user wants the Electron companion on their local desktop.
 
 ## Compatibility Matrix
 
 | Surface | Expected support | Why |
 | --- | --- | --- |
-| Claude Code CLI, local | Yes | Full plugin/hook surface; local daemon and browser can run on the user's machine. |
+| Claude Code CLI, local | Yes | Full plugin/hook surface; local daemon and Electron companion can run on the user's machine. |
 | Claude Code Desktop, local | Yes | Desktop docs say Desktop uses the same underlying engine and supports plugin installation for local sessions. |
 | Claude Code Desktop, SSH | Partial | Plugins are available for SSH sessions, but the daemon/player would run on the SSH host. Needs port forwarding or a local companion mode. |
 | Claude Code Desktop, remote/cloud | No | Desktop docs explicitly say plugins are not available for remote sessions. |
 | VS Code extension, local | Likely yes | VS Code docs say settings such as hooks and MCP are shared with CLI, and the extension includes the CLI. Needs hands-on validation before public claims. |
 | VS Code extension, dev container/remote SSH | Partial | Same issue as SSH: playback process runs remotely unless a local bridge is added. |
-| Claude Code on the web | No | Cloud sessions do not run local plugin hooks/player. |
+| Claude Code on the web | No | Cloud sessions do not run local plugin hooks/Electron companion. |
 | Mobile monitoring / Remote Control of local session | Indirect | If the underlying session is local CLI/VS Code, hooks can run locally. Mobile itself does not host the player. |
 | JetBrains local | Likely partial | Claude Code IDE surfaces share the underlying engine, but plugin install UX and hook behavior should be validated directly. |
 
@@ -56,14 +56,14 @@ Hooks:
 
 ### Local CLI
 
-Primary target. The current daemon/player architecture is appropriate.
+Primary target. The current daemon plus Electron companion architecture is appropriate.
 
 ### Desktop Local
 
 Should be supported, but onboarding must mention environment caveats:
 
 - Node must be available in Desktop's local session environment.
-- If the player launcher cannot find the system browser, use `player-url` and the Desktop preview/browser manually.
+- The supported player is the Electron companion. If Electron is unavailable, show setup guidance instead of opening a regular browser fallback.
 - Desktop plugin install UI should be tested with the packaged plugin.
 
 ### VS Code Local
@@ -75,7 +75,7 @@ Likely supported if the plugin is installed into Claude Code's shared plugin sys
 - Confirm hooks fire.
 - Confirm `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_DATA}` are set.
 - Confirm daemon starts.
-- Confirm `open-player` launches the local browser.
+- Confirm `open-player` launches the local Electron companion.
 
 ### SSH And Remote Dev Environments
 
@@ -100,4 +100,3 @@ Unsupported for now. If `$CLAUDE_CODE_REMOTE=true`, the plugin should not start 
 - VS Code Remote SSH/dev container with remote-safe mode.
 - Confirm plugin install and skill visibility in Desktop plugin UI.
 - Confirm hooks fire from VS Code extension sessions, not only terminal mode.
-

@@ -15,4 +15,4 @@ Default rules:
 3. Respect Shabbos/Yom Tov guard settings.
 4. Respect manual pause until the user resumes or the configured timeout expires.
 5. Never let playback failures interrupt coding work.
-
+6. Use the floating Electron companion as the only video playback surface. Do not open the shiur in a regular browser window as a fallback.

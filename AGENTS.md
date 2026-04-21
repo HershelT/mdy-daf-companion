@@ -25,7 +25,7 @@ The complete product should include:
 - Claude Code plugin packaging for release and local testing.
 - Hooks that understand Claude's working lifecycle: session start, user prompt submit, tool loops, notifications, stop, stop failure, idle, and session end.
 - A small local daemon that owns playback, YouTube state, stats, and persistence.
-- A browser/player window using the YouTube IFrame API.
+- A dedicated floating Electron companion window using the YouTube IFrame API.
 - A resolver that finds the correct shiur for today's daf, language, and format.
 - A status line or command output showing current daf, watch progress, coding time, and learning streak.
 - Slash commands or skills for status, pause/resume, today's daf, stats, backfill, and settings.
@@ -34,14 +34,14 @@ The complete product should include:
 
 ## Recommended Architecture
 
-Use Node.js/TypeScript for the plugin runtime unless there is a strong reason not to. Claude Code users already run cross-platform CLI tooling, and Node gives good support for child processes, local HTTP servers, SQLite bindings, browser launching, and JSON hook contracts.
+Use Node.js/TypeScript for the plugin runtime unless there is a strong reason not to. Claude Code users already run cross-platform CLI tooling, and Node gives good support for child processes, local HTTP servers, SQLite bindings, Electron launching, and JSON hook contracts.
 
 High-level components:
 
 - `plugin manifest`: package identity, config, and release metadata.
 - `hooks`: tiny scripts that forward Claude Code events to the daemon.
 - `daemon`: local HTTP/IPC server, process supervisor, resolver scheduler, stats writer.
-- `player`: local web app that embeds YouTube, tracks state through the IFrame API, and responds to daemon commands.
+- `player`: Electron-only floating companion app that embeds YouTube, tracks state through the IFrame API, remembers window placement, and responds to daemon commands.
 - `resolver`: maps date and preferences to the best MDY video.
 - `database`: SQLite in `CLAUDE_PLUGIN_DATA`.
 - `status`: short formatter for Claude Code status line or `/mdy-daf-companion:status`.
@@ -60,7 +60,8 @@ Keep those files current when new facts change the product design.
 - Use structured APIs where possible. Avoid scraping HTML if YouTube Data API, MDY app data, or a stable JSON endpoint can answer the question.
 - If scraping is required, isolate it behind a source adapter with caching and tests.
 - Every hook script must exit quickly and must fail open. A broken Daf plugin should never break the user's coding session.
-- Never block Claude Code waiting for YouTube, browser startup, networking, or stats writes.
+- Never block Claude Code waiting for YouTube, Electron startup, networking, or stats writes.
+- Do not add a browser video player or browser fallback. The released playback surface is the floating Electron companion; if Electron is unavailable, report setup guidance and keep Claude Code running.
 - Use idempotent event handling. Claude hooks may run repeatedly or after resume.
 - Design for Windows, macOS, and Linux.
 - Prefer small, testable modules over one large script.
@@ -81,4 +82,3 @@ Before public release:
 ## Collaboration
 
 When a future agent works here, read the specs first, then make a narrow implementation plan. If the work touches user-facing behavior, update the product spec or technical architecture as part of the same change.
-

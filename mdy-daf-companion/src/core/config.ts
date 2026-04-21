@@ -41,8 +41,11 @@ export function loadConfig(paths: RuntimePaths): AppConfig {
   const fileConfig = fs.existsSync(paths.configPath)
     ? (JSON.parse(fs.readFileSync(paths.configPath, "utf8")) as Partial<AppConfig>)
     : {};
+  const { playerSurface: _legacyPlayerSurface, ...normalizedFileConfig } = fileConfig as Partial<AppConfig> & {
+    playerSurface?: unknown;
+  };
 
-  return validateConfig({ ...defaultConfig, ...fileConfig, ...pluginEnvConfig(process.env) });
+  return validateConfig({ ...defaultConfig, ...normalizedFileConfig, ...pluginEnvConfig(process.env) });
 }
 
 export function saveConfig(paths: RuntimePaths, config: AppConfig): void {

@@ -1,6 +1,6 @@
 # MDY Daf Companion
 
-MDY Daf Companion is a Claude Code plugin for developers who learn Daf Yomi. It resolves the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur, opens a local YouTube player while Claude Code works, pauses when Claude waits for you, saves your place, and tracks local learning/coding stats.
+MDY Daf Companion is a Claude Code plugin for developers who learn Daf Yomi. It resolves the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur, opens a floating Electron YouTube companion while Claude Code works, pauses when Claude waits for you, saves your place, and tracks local learning/coding stats.
 
 The plugin is local-first: playback uses the YouTube IFrame API, state is stored on your machine, and no prompt text, source code, transcript content, or raw tool input is stored by default.
 
@@ -14,11 +14,11 @@ The plugin is local-first: playback uses the YouTube IFrame API, state is stored
   - Optional YouTube Data API.
   - Public MDY YouTube channel page fallback.
 - Scores candidates by masechta, daf, language, format, duration, source, and exclusion rules.
-- Plays through an authenticated local player page using the YouTube IFrame API.
+- Plays through a movable, always-on-top Electron companion using the YouTube IFrame API.
 - Automatically maps Claude lifecycle hooks to play/pause/prepare behavior.
 - Saves playback progress and resumes from the last position.
 - Tracks watched minutes, coding minutes, completion counts, and watch/coding ratio.
-- Provides a local stats dashboard.
+- Provides stats inside the Electron companion, with a token-protected dashboard URL for diagnostics.
 - Includes Shabbos guard and a Hebcal Yom Tov guard adapter.
 - Supports Claude Code CLI local sessions, Claude Desktop local sessions, and local VS Code extension sessions.
 
@@ -27,9 +27,9 @@ The plugin is local-first: playback uses the YouTube IFrame API, state is stored
 - Claude Code with plugin support.
 - Node.js 24 or newer.
 - Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
-- A local Claude Code session for automatic player control.
+- A local Claude Code session for automatic Electron companion control.
 
-Remote/cloud Claude sessions are not supported for local playback. The plugin detects `CLAUDE_CODE_REMOTE=true` and disables daemon startup in that environment.
+Remote/cloud Claude sessions are not supported for local playback. The plugin detects `CLAUDE_CODE_REMOTE=true` and disables daemon startup in that environment. The product no longer opens a regular browser video player; the supported playback surface is the Electron companion.
 
 ## Install
 
@@ -79,13 +79,13 @@ Prepare today’s shiur:
 /mdy-daf-companion:prepare
 ```
 
-Open the player:
+Open the floating companion:
 
 ```text
 /mdy-daf-companion:play
 ```
 
-Open the dashboard:
+Open the in-companion stats dashboard, or use the `Stats` button in the Electron companion:
 
 ```text
 /mdy-daf-companion:dashboard
@@ -119,7 +119,7 @@ cd mdy-daf-companion
 npm run check
 node dist/src/cli.js doctor
 node dist/src/cli.js prepare
-node dist/src/cli.js open-dashboard
+node dist/src/cli.js open-player
 ```
 
 ## How Video Resolution Works
@@ -150,10 +150,10 @@ confidence 0.87
 | Claude Code CLI local | Supported | Best-tested local path. |
 | Claude Desktop local | Supported target | Plugins are available in local Desktop sessions; validate Node availability. |
 | VS Code extension local | Supported target | Shares Claude Code settings/hook behavior with CLI; validate in your local extension session. |
-| Desktop SSH | Partial | Plugin runs on the SSH host; player may require port forwarding. |
+| Desktop SSH | Partial | Plugin runs on the SSH host; the Electron companion would open on that host unless a local bridge is added. |
 | VS Code Remote SSH/dev containers | Partial | Same remote-host caveat as SSH. |
 | Desktop remote/cloud | Unsupported | Claude docs say plugins are unavailable for remote Desktop sessions. |
-| Claude Code web/cloud | Unsupported | No local daemon/player surface. |
+| Claude Code web/cloud | Unsupported | No local daemon/Electron companion surface. |
 
 See [Install And Compatibility](docs/install-and-compatibility.md).
 
@@ -172,7 +172,7 @@ npm run check
 - Claude plugin validation.
 - Smoke checks.
 
-Current automated coverage includes hook parsing, daemon auth, player rendering, progress persistence, resolver scoring, source adapters, stats, dashboard rendering, setup, guards, and plugin surface detection.
+Current automated coverage includes hook parsing, daemon auth, Electron companion rendering, in-companion dashboard data, progress persistence, resolver scoring, source adapters, stats, dashboard rendering, setup, guards, and plugin surface detection.
 
 ## Documentation
 
@@ -207,11 +207,10 @@ Still required before public launch:
 - Hands-on Claude Desktop local validation on macOS and Windows.
 - Hands-on VS Code extension local validation.
 - SSH/dev-container port-forwarding validation.
-- macOS and Linux browser-launch smoke tests.
+- macOS and Linux Electron companion launch smoke tests.
 - Brand/legal review before public marketing.
 - Optional MDY permission or partnership outreach.
 
 ## License
 
 MIT. See [LICENSE](mdy-daf-companion/LICENSE).
-

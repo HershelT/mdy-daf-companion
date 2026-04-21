@@ -40,7 +40,7 @@ Use mocked YouTube IFrame API for deterministic tests:
 - Emit progress.
 - Save completion.
 
-Use real browser smoke tests sparingly:
+Use real Electron companion smoke tests sparingly:
 
 - Player page is nonblank.
 - Controls are visible.
@@ -99,4 +99,3 @@ Before release:
 - Confirm no secrets or API keys are committed.
 - Verify README installation instructions.
 - Verify uninstall leaves user data policy clear.
-

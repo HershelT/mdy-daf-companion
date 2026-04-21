@@ -8,7 +8,7 @@ import { parseHookPayload, toHookEventRecord } from "../hooks/events.js";
 import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.js";
 import { renderPlayerPage } from "../player/page.js";
 import { renderDashboardPage } from "../dashboard/page.js";
-import { openUrl } from "../player/launcher.js";
+import { openCompanionPlayer } from "../player/companionLauncher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
 import { chooseBestCandidate } from "../resolver/scoring.js";
 import { createDefaultCandidateProvider } from "../resolver/defaultProvider.js";
@@ -82,11 +82,29 @@ export async function startDaemonServer(paths, port = 0) {
             completionPercent: progress?.completionPercent || 0
         };
     }
+    function dashboardSnapshot() {
+        const date = today();
+        const rows = database.getDailyStatsRange(date, date);
+        const todayStats = summarizeDailyStats(database.getDailyStats(date));
+        const weekStats = summarizeDailyStats({
+            date,
+            watchedSeconds: rows.reduce((sum, row) => sum + row.watchedSeconds, 0),
+            codingSeconds: rows.reduce((sum, row) => sum + row.codingSeconds, 0),
+            dafimCompleted: rows.reduce((sum, row) => sum + row.dafimCompleted, 0),
+            videosTouched: rows.reduce((sum, row) => sum + row.videosTouched, 0),
+            updatedAt: nowIso()
+        });
+        return {
+            playbackState: memory.playbackState,
+            currentShiur: currentShiurStatus(),
+            stats: { today: todayStats, week: weekStats }
+        };
+    }
     function markCodingActive() {
         memory.activeCodingStartedAt ??= Date.now();
     }
-    function playerUrl(port) {
-        return `http://127.0.0.1:${port}/player?token=${encodeURIComponent(token)}`;
+    function companionUrl(port) {
+        return `http://127.0.0.1:${port}/companion?token=${encodeURIComponent(token)}`;
     }
     function flushCodingSeconds() {
         if (!memory.activeCodingStartedAt) {
@@ -115,10 +133,11 @@ export async function startDaemonServer(paths, port = 0) {
                 sendJson(response, 200, { ok: true, pid: process.pid, startedAt });
                 return;
             }
-            if (request.method === "GET" && url.pathname === "/player") {
+            if (request.method === "GET" && url.pathname === "/companion") {
                 response.writeHead(200, {
                     "content-type": "text/html; charset=utf-8",
-                    "cache-control": "no-store"
+                    "cache-control": "no-store",
+                    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; frame-src https://www.youtube.com; img-src 'self' https: data:; connect-src 'self' https://www.youtube.com https://*.youtube.com; media-src https: blob:"
                 });
                 response.end(renderPlayerPage({
                     token,
@@ -127,32 +146,27 @@ export async function startDaemonServer(paths, port = 0) {
                     sourceUrl: currentShiurStatus()?.sourceUrl,
                     initialPositionSeconds: currentShiurStatus()?.positionSeconds,
                     completionPercent: currentShiurStatus()?.completionPercent,
-                    playbackState: memory.playbackState
+                    playbackState: memory.playbackState,
+                    companionMode: true
                 }));
                 return;
             }
             if (request.method === "GET" && url.pathname === "/dashboard") {
-                const date = today();
-                const rows = database.getDailyStatsRange(date, date);
-                const todayStats = summarizeDailyStats(database.getDailyStats(date));
-                const weekStats = summarizeDailyStats({
-                    date,
-                    watchedSeconds: rows.reduce((sum, row) => sum + row.watchedSeconds, 0),
-                    codingSeconds: rows.reduce((sum, row) => sum + row.codingSeconds, 0),
-                    dafimCompleted: rows.reduce((sum, row) => sum + row.dafimCompleted, 0),
-                    videosTouched: rows.reduce((sum, row) => sum + row.videosTouched, 0),
-                    updatedAt: nowIso()
-                });
+                const snapshot = dashboardSnapshot();
                 response.writeHead(200, {
                     "content-type": "text/html; charset=utf-8",
                     "cache-control": "no-store"
                 });
                 response.end(renderDashboardPage({
                     token,
-                    playbackState: memory.playbackState,
-                    currentShiur: currentShiurStatus(),
-                    stats: { today: todayStats, week: weekStats }
+                    playbackState: snapshot.playbackState,
+                    currentShiur: snapshot.currentShiur,
+                    stats: snapshot.stats
                 }));
+                return;
+            }
+            if (request.method === "GET" && url.pathname === "/api/dashboard") {
+                sendJson(response, 200, { ok: true, ...dashboardSnapshot() });
                 return;
             }
             if (request.method === "GET" && url.pathname === "/status") {
@@ -194,7 +208,7 @@ export async function startDaemonServer(paths, port = 0) {
                         if (config.autoOpenPlayer && config.openPlayerOnPrompt) {
                             const address = server.address();
                             if (address && typeof address !== "string") {
-                                openUrl(playerUrl(address.port));
+                                openCompanionPlayer(paths, companionUrl(address.port));
                             }
                         }
                     }

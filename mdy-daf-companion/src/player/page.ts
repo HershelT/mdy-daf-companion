@@ -8,16 +8,23 @@ export interface PlayerPageOptions {
   initialPositionSeconds?: number;
   completionPercent?: number;
   playbackState: PlaybackState;
+  companionMode?: boolean;
 }
 
 export function renderPlayerPage(options: PlayerPageOptions): string {
-  const videoId = escapeHtml(options.videoId || "");
+  const rawVideoId = options.videoId || "";
+  const videoId = escapeHtml(rawVideoId);
   const title = escapeHtml(options.title || "MDY Daf Companion");
   const sourceUrl = escapeHtml(options.sourceUrl || "");
   const token = escapeHtml(options.token);
   const playbackState = escapeHtml(options.playbackState);
   const initialPositionSeconds = Math.max(0, options.initialPositionSeconds || 0);
   const completionPercent = Math.max(0, Math.min(100, options.completionPercent || 0));
+  const companionMode = Boolean(options.companionMode);
+  const autoplay = options.playbackState === "playing" ? "&autoplay=1" : "";
+  const embedUrl = rawVideoId
+    ? escapeHtml(`https://www.youtube.com/embed/${encodeURIComponent(rawVideoId)}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1${autoplay}`)
+    : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -65,6 +72,19 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
     }
     .title-block {
       min-width: 0;
+    }
+    .window-actions {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    .window-actions button {
+      min-width: 30px;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      font-size: 13px;
     }
     .eyebrow {
       color: var(--green);
@@ -118,6 +138,58 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       width: 100% !important;
       height: 100% !important;
       display: block;
+    }
+    .empty-player {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      padding: 18px;
+      text-align: center;
+      font-weight: 700;
+      background: #172033;
+    }
+    .dashboard-view {
+      display: none;
+    }
+    .dashboard-panel {
+      color: #FFFFFF;
+    }
+    .dashboard-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .dashboard-head h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+    .dashboard-card {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .dashboard-label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .dashboard-value {
+      margin-top: 4px;
+      color: #FFFFFF;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 850;
+    }
+    .dashboard-title {
+      overflow-wrap: anywhere;
+      line-height: 1.25;
+      font-weight: 800;
     }
     button {
       min-width: 42px;
@@ -175,9 +247,162 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
         width: 100%;
       }
     }
+    body.companion {
+      overflow: hidden;
+      background: #05070A;
+    }
+    body.companion main {
+      height: 100vh;
+      min-height: 100vh;
+      display: block;
+      position: relative;
+      background: #05070A;
+    }
+    body.companion header {
+      position: absolute;
+      z-index: 20;
+      top: 0;
+      left: 0;
+      right: 0;
+      min-height: 48px;
+      padding: 8px 10px;
+      gap: 8px;
+      -webkit-app-region: drag;
+      border-bottom: 0;
+      background: linear-gradient(180deg, rgba(5, 7, 10, 0.88), rgba(5, 7, 10, 0));
+      color: #FFFFFF;
+      opacity: 0;
+      transition: opacity 140ms ease;
+      cursor: move;
+    }
+    body.companion .title-block {
+      flex: 1 1 auto;
+    }
+    body.companion .eyebrow {
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+    body.companion h1 {
+      font-size: 13px;
+      line-height: 1.2;
+      color: #FFFFFF;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    body.companion #state {
+      font-size: 11px;
+      padding: 4px 7px;
+      -webkit-app-region: no-drag;
+    }
+    body.companion .window-actions {
+      display: flex;
+    }
+    body.companion .video-shell {
+      position: absolute;
+      inset: 0;
+      padding: 0;
+      display: block;
+    }
+    body.companion .video-frame {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      aspect-ratio: auto;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    body.companion .dashboard-view {
+      position: absolute;
+      z-index: 14;
+      inset: 0;
+      overflow: auto;
+      padding: 54px 12px 66px;
+      background: radial-gradient(circle at top left, rgba(22, 138, 91, 0.22), transparent 34%),
+        linear-gradient(135deg, rgba(8, 13, 20, 0.98), rgba(15, 23, 42, 0.98));
+    }
+    body.companion.dashboard-open .dashboard-view {
+      display: block;
+    }
+    body.companion.dashboard-open .video-shell {
+      display: none;
+    }
+    body.companion .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+    body.companion .dashboard-card.current {
+      grid-column: 1 / -1;
+    }
+    body.companion footer {
+      position: absolute;
+      z-index: 20;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 26px 10px 9px;
+      gap: 7px;
+      flex-wrap: wrap;
+      border-top: 0;
+      background: linear-gradient(0deg, rgba(5, 7, 10, 0.9), rgba(5, 7, 10, 0));
+      opacity: 0;
+      transition: opacity 140ms ease;
+    }
+    body.companion footer button {
+      min-width: 36px;
+      height: 34px;
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.36);
+      backdrop-filter: blur(10px);
+    }
+    body.companion footer #play {
+      background: rgba(22, 138, 91, 0.9);
+      border-color: rgba(22, 138, 91, 0.9);
+    }
+    body.companion footer #pause {
+      background: rgba(37, 99, 235, 0.9);
+      border-color: rgba(37, 99, 235, 0.9);
+    }
+    body.companion footer #dashboard-toggle,
+    body.companion #dashboard-back {
+      min-width: 52px;
+      font-size: 12px;
+    }
+    body.companion progress {
+      order: 10;
+      min-width: 0;
+      width: 100%;
+      height: 9px;
+    }
+    body.companion .source-link {
+      color: #FFFFFF;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+    }
+    body.companion:hover header,
+    body.companion:hover footer,
+    body.companion:focus-within header,
+    body.companion:focus-within footer {
+      opacity: 1;
+    }
+    body.companion::before {
+      content: "";
+      position: absolute;
+      z-index: 30;
+      top: 0;
+      left: 42%;
+      right: 42%;
+      height: 4px;
+      border-radius: 0 0 999px 999px;
+      background: rgba(255, 255, 255, 0.46);
+      pointer-events: none;
+    }
   </style>
 </head>
-<body>
+<body${companionMode ? ` class="companion"` : ""}>
   <main>
     <header>
       <div class="title-block">
@@ -185,10 +410,33 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
         <h1 id="shiur-title">${title}</h1>
       </div>
       <span id="state">${playbackState}</span>
+      <div class="window-actions" aria-label="Window controls">
+        <button id="pin-window" title="Toggle always on top" aria-label="Toggle always on top">▲</button>
+        <button id="minimize-window" title="Minimize" aria-label="Minimize">_</button>
+        <button id="close-window" title="Close" aria-label="Close">×</button>
+      </div>
     </header>
     <section class="video-shell">
       <div class="video-frame">
-        <div id="player" aria-label="YouTube shiur player"></div>
+        ${
+          embedUrl
+            ? `<iframe id="player" aria-label="YouTube shiur player" src="${embedUrl}" title="${title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`
+            : `<div id="player" class="empty-player" aria-label="YouTube shiur player">No shiur loaded yet</div>`
+        }
+      </div>
+    </section>
+    <section id="dashboard-view" class="dashboard-view" aria-label="MDY Daf Companion stats" hidden>
+      <div class="dashboard-panel">
+        <div class="dashboard-head">
+          <h2>Stats</h2>
+          <button id="dashboard-back" title="Back to video" aria-label="Back to video">Video</button>
+        </div>
+        <div id="dashboard-content" class="dashboard-grid">
+          <article class="dashboard-card current">
+            <div class="dashboard-label">Current Shiur</div>
+            <div class="dashboard-title">Loading stats...</div>
+          </article>
+        </div>
       </div>
     </section>
     <footer>
@@ -197,6 +445,7 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       <button id="back" title="Back 30 seconds" aria-label="Back 30 seconds">-30</button>
       <button id="forward" title="Forward 30 seconds" aria-label="Forward 30 seconds">+30</button>
       <button id="watched" title="Mark watched" aria-label="Mark watched">✓</button>
+      <button id="dashboard-toggle" title="Show stats" aria-label="Show stats">Stats</button>
       <progress id="progress" value="${completionPercent}" max="100" aria-label="Watch progress"></progress>
       ${sourceUrl ? `<a id="source-link" class="source-link" href="${sourceUrl}" target="_blank" rel="noreferrer">YouTube</a>` : ""}
     </footer>
@@ -293,6 +542,66 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       applyDesiredPlaybackState();
     }
 
+    function addText(parent, className, value) {
+      const node = document.createElement("div");
+      node.className = className;
+      node.textContent = value;
+      parent.appendChild(node);
+      return node;
+    }
+
+    function statCard(label, value) {
+      const card = document.createElement("article");
+      card.className = "dashboard-card";
+      addText(card, "dashboard-label", label);
+      addText(card, "dashboard-value", value);
+      return card;
+    }
+
+    function renderDashboard(data) {
+      const content = document.getElementById("dashboard-content");
+      if (!content) return;
+      content.textContent = "";
+      const current = document.createElement("article");
+      current.className = "dashboard-card current";
+      addText(current, "dashboard-label", "Current Shiur");
+      addText(current, "dashboard-title", data?.currentShiur?.title || "No shiur prepared");
+      content.appendChild(current);
+      const today = data?.stats?.today || {};
+      const week = data?.stats?.week || {};
+      content.appendChild(statCard("Watched Today", (today.watchedMinutes || 0) + "m"));
+      content.appendChild(statCard("Coding Today", (today.codingMinutes || 0) + "m"));
+      content.appendChild(statCard("Week Watched", (week.watchedMinutes || 0) + "m"));
+      content.appendChild(statCard("Dafim Done", String(week.dafimCompleted || 0)));
+    }
+
+    async function loadDashboard() {
+      const response = await fetch("/api/dashboard", {
+        headers: { authorization: "Bearer " + MDY_DAF.token }
+      }).catch(() => null);
+      if (!response?.ok) return;
+      const data = await response.json().catch(() => null);
+      if (data?.ok) {
+        renderDashboard(data);
+      }
+    }
+
+    function setDashboardOpen(open) {
+      document.body.classList.toggle("dashboard-open", open);
+      const view = document.getElementById("dashboard-view");
+      if (view) {
+        view.hidden = !open;
+      }
+      const toggle = document.getElementById("dashboard-toggle");
+      if (toggle) {
+        toggle.textContent = open ? "Video" : "Stats";
+        toggle.setAttribute("aria-label", open ? "Back to video" : "Show stats");
+      }
+      if (open) {
+        loadDashboard();
+      }
+    }
+
     async function sendProgress(force = false) {
       if (!MDY_DAF.player || typeof MDY_DAF.player.getCurrentTime !== "function") return;
       const now = Date.now();
@@ -357,6 +666,34 @@ export function renderPlayerPage(options: PlayerPageOptions): string {
       }).catch(() => {});
       document.getElementById("progress").value = 100;
     });
+    document.getElementById("dashboard-toggle")?.addEventListener("click", () => {
+      setDashboardOpen(!document.body.classList.contains("dashboard-open"));
+    });
+    document.getElementById("dashboard-back")?.addEventListener("click", () => {
+      setDashboardOpen(false);
+    });
+    if (window.location.hash === "#stats" || window.location.hash === "#dashboard") {
+      setDashboardOpen(true);
+    }
+    document.getElementById("pin-window")?.addEventListener("click", async () => {
+      const pinned = await window.mdyCompanion?.toggleAlwaysOnTop?.();
+      const button = document.getElementById("pin-window");
+      if (button && typeof pinned === "boolean") {
+        button.textContent = pinned ? "▲" : "△";
+      }
+    });
+    document.getElementById("minimize-window")?.addEventListener("click", () => {
+      window.mdyCompanion?.minimize?.();
+    });
+    document.getElementById("close-window")?.addEventListener("click", () => {
+      window.mdyCompanion?.close?.();
+    });
+    window.mdyCompanion?.state?.().then?.((state) => {
+      const button = document.getElementById("pin-window");
+      if (button && typeof state?.alwaysOnTop === "boolean") {
+        button.textContent = state.alwaysOnTop ? "▲" : "△";
+      }
+    }).catch?.(() => {});
     window.setInterval(() => sendProgress(false), 5000);
     window.setInterval(() => pollDaemonStatus(), 1500);
     pollDaemonStatus();

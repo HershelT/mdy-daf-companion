@@ -56,12 +56,12 @@ export async function resolveCurrentShiur(paths: RuntimePaths, date?: string): P
   return daemonFetch(state, `/api/resolve${query}`, { method: "POST" });
 }
 
-export async function getPlayerUrl(paths: RuntimePaths): Promise<string> {
+export async function getCompanionPlayerUrl(paths: RuntimePaths): Promise<string> {
   const state = readDaemonState(paths);
   if (!state) {
     throw new DaemonUnavailableError();
   }
-  return `http://${state.host}:${state.port}/player?token=${encodeURIComponent(state.token)}`;
+  return `http://${state.host}:${state.port}/companion?token=${encodeURIComponent(state.token)}`;
 }
 
 export async function getDashboardUrl(paths: RuntimePaths): Promise<string> {

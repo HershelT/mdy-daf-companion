@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "companion": "electron desktop/electron/main.cjs",
     "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "validate:plugin": "claude plugin validate .",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "electron": "^41.2.1",
     "typescript": "^5.9.3"
   },
   "engines": {

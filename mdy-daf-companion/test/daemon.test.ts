@@ -76,7 +76,7 @@ test("daemon records hook events and updates playback state", async () => {
   }
 });
 
-test("daemon serves token-protected player page", async () => {
+test("daemon does not serve the removed browser player route", async () => {
   const paths = tempPaths();
   const daemon = await startDaemonServer(paths);
   try {
@@ -84,10 +84,20 @@ test("daemon serves token-protected player page", async () => {
     assert.equal(unauthorized.status, 401);
 
     const response = await fetch(`http://127.0.0.1:${daemon.port}/player?token=${daemon.token}`);
+    assert.equal(response.status, 404);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("daemon serves companion-mode player page", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/companion?token=${daemon.token}`);
     const html = await response.text();
     assert.equal(response.status, 200);
-    assert.match(html, /youtube\.com\/iframe_api/);
-    assert.match(html, /MDY Daf Companion/);
+    assert.match(html, /class="companion"/);
   } finally {
     await daemon.close();
   }
@@ -162,7 +172,7 @@ test("daemon stores current video and renders resume position in player", async 
     });
     database.close();
 
-    const response = await fetch(`http://127.0.0.1:${daemon.port}/player?token=${daemon.token}`);
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/companion?token=${daemon.token}`);
     const html = await response.text();
     assert.match(html, /Daf Yomi Menachos Daf 98/);
     assert.match(html, /initialPositionSeconds: 42/);
@@ -205,6 +215,52 @@ test("daemon serves dashboard with stats and current shiur", async () => {
     assert.equal(response.status, 200);
     assert.match(html, /Daf Yomi Menachos Daf 98/);
     assert.match(html, /Watched Today/);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("daemon serves dashboard data for the Electron companion", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const database = new AppDatabase(paths);
+    database.migrate();
+    database.setSetting("currentShiurVideoId", "video-1");
+    database.upsertVideo({
+      id: "video-1",
+      videoId: "video-1",
+      source: "test",
+      sourceUrl: "https://www.youtube.com/watch?v=video-1",
+      title: "Daf Yomi Menachos Daf 98",
+      language: "english",
+      format: "full",
+      masechta: "Menachos",
+      daf: 98,
+      durationSeconds: 100,
+      publishedAt: null,
+      confidence: 1,
+      rawMetadataJson: null
+    });
+    database.incrementDailyStats(civilDateInTimezone(new Date(), "UTC"), {
+      watchedSeconds: 900,
+      codingSeconds: 1800,
+      dafimCompleted: 1
+    });
+    database.close();
+
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/api/dashboard`, {
+      headers: { authorization: `Bearer ${daemon.token}` }
+    });
+    const json = (await response.json()) as {
+      ok: boolean;
+      currentShiur: { title: string };
+      stats: { today: { watchedMinutes: number } };
+    };
+    assert.equal(response.status, 200);
+    assert.equal(json.ok, true);
+    assert.equal(json.currentShiur.title, "Daf Yomi Menachos Daf 98");
+    assert.equal(json.stats.today.watchedMinutes, 15);
   } finally {
     await daemon.close();
   }

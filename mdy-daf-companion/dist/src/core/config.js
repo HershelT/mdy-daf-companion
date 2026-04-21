@@ -18,7 +18,8 @@ export function loadConfig(paths) {
     const fileConfig = fs.existsSync(paths.configPath)
         ? JSON.parse(fs.readFileSync(paths.configPath, "utf8"))
         : {};
-    return validateConfig({ ...defaultConfig, ...fileConfig, ...pluginEnvConfig(process.env) });
+    const { playerSurface: _legacyPlayerSurface, ...normalizedFileConfig } = fileConfig;
+    return validateConfig({ ...defaultConfig, ...normalizedFileConfig, ...pluginEnvConfig(process.env) });
 }
 export function saveConfig(paths, config) {
     fs.writeFileSync(paths.configPath, `${JSON.stringify(validateConfig(config), null, 2)}\n`, "utf8");

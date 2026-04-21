@@ -14,6 +14,8 @@ test("player page contains YouTube iframe API and local progress endpoint", () =
   });
 
   assert.match(html, /youtube\.com\/iframe_api/);
+  assert.match(html, /youtube\.com\/embed\/2qz8rC9Yh_k/);
+  assert.match(html, /enablejsapi=1/);
   assert.match(html, /2qz8rC9Yh_k/);
   assert.match(html, /\/api\/progress/);
   assert.match(html, /\/status/);
@@ -33,4 +35,32 @@ test("player page escapes injected video id", () => {
 
   assert.doesNotMatch(html, /"><script>/);
   assert.match(html, /&lt;script&gt;/);
+});
+
+test("player page renders companion shell controls", () => {
+  const html = renderPlayerPage({
+    token: "token",
+    videoId: "2qz8rC9Yh_k",
+    playbackState: "playing",
+    companionMode: true
+  });
+
+  assert.match(html, /class="companion"/);
+  assert.match(html, /window-actions/);
+  assert.match(html, /dashboard-toggle/);
+  assert.match(html, /dashboard-view/);
+  assert.match(html, /\/api\/dashboard/);
+  assert.match(html, /window\.location\.hash === "#stats"/);
+  assert.match(html, /mdyCompanion/);
+});
+
+test("playing companion page requests YouTube autoplay", () => {
+  const html = renderPlayerPage({
+    token: "token",
+    videoId: "2qz8rC9Yh_k",
+    playbackState: "playing",
+    companionMode: true
+  });
+
+  assert.match(html, /autoplay=1/);
 });

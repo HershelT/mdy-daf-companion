@@ -37,6 +37,5 @@ test("renderDashboardPage shows current shiur and stats", () => {
 
   assert.match(html, /Daf Yomi Menachos Daf 98/);
   assert.match(html, /Watched Today/);
-  assert.match(html, /Open Player/);
+  assert.match(html, /Open Companion/);
 });
-

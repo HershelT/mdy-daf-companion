@@ -2,14 +2,14 @@
 
 ## Summary
 
-`mdy-daf-companion` should be a Claude Code plugin with a local daemon. Claude Code hooks provide lifecycle signals; the daemon owns playback, resolver state, stats, and persistence; a local player page embeds the official YouTube video.
+`mdy-daf-companion` should be a Claude Code plugin with a local daemon. Claude Code hooks provide lifecycle signals; the daemon owns playback, resolver state, stats, and persistence; a floating Electron companion embeds the official YouTube video through the local daemon.
 
 ```mermaid
 flowchart LR
   Claude["Claude Code"] --> Hooks["Plugin hooks"]
   Hooks --> CLI["mdy-daf CLI"]
   CLI --> Daemon["Local daemon"]
-  Daemon --> Player["Local player window"]
+  Daemon --> Player["Floating Electron companion"]
   Player --> YouTube["YouTube IFrame API"]
   Daemon --> DB["SQLite in plugin data"]
   Daemon --> Resolver["Shiur resolver"]
@@ -114,15 +114,15 @@ Purpose:
 
 Implementation target:
 
-- Local web app served by daemon.
-- Browser window launched through OS default browser or a controlled Chromium profile.
-- Production choice should be based on reliability:
-  - System browser is lighter.
-  - Playwright/Electron/Tauri-style controlled window is more reliable for command/control.
+- Local web app served by daemon inside Electron.
+- Floating Electron companion launched by the runtime.
+- Production choice is Electron-only:
+  - Electron adds packaging weight.
+  - A dedicated companion gives reliable focus, always-on-top behavior, window placement persistence, and no regular browser-tab clutter.
 
 Recommendation:
 
-- For public v1, use a lightweight local web app plus a controlled Chromium profile if feasible. If packaging becomes heavy, support system browser as a fallback.
+- For public v1, use the Electron companion as the only video playback surface. If Electron is missing, report setup guidance and keep Claude Code running; do not open a regular browser fallback.
 
 ### Resolver
 
@@ -239,4 +239,3 @@ MDY Menachos 99 18/61m watched | code 42m
 - Do not inspect project source files for stats.
 - Redact cwd or hash it for project-level analytics.
 - Keep API keys in plugin data or OS keychain, never in the repository.
-

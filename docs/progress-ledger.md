@@ -59,8 +59,8 @@ These cannot be fully proven from one Windows local workspace alone:
 - Run plugin from VS Code extension local chat panel, not just shared CLI settings.
 - Validate Desktop SSH behavior and document port-forwarding path.
 - Validate VS Code Remote SSH/dev container behavior.
-- Test macOS local browser launch.
-- Test Linux CLI browser launch.
+- Test macOS local Electron companion launch.
+- Test Linux CLI Electron companion launch.
 - Confirm Node availability in Desktop environment on macOS and Windows.
 - Brand/legal review before public marketing.
 - Direct MDY permission or partnership outreach.
@@ -72,4 +72,3 @@ These cannot be fully proven from one Windows local workspace alone:
 - More polished dashboard charts.
 - Optional cloud sync/supporter features.
 - Real marketplace publishing flow.
-

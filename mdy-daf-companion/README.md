@@ -1,6 +1,6 @@
 # MDY Daf Companion Plugin
 
-MDY Daf Companion is a Claude Code plugin that plays the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur while Claude Code works, pauses when Claude waits for you, saves progress, and tracks local Daf Yomi/coding stats.
+MDY Daf Companion is a Claude Code plugin that plays the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur in a floating Electron companion while Claude Code works, pauses when Claude waits for you, saves progress, and tracks local Daf Yomi/coding stats.
 
 This plugin is independent and is not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
 
@@ -8,11 +8,11 @@ This plugin is independent and is not affiliated with or endorsed by Mercaz Daf 
 
 - Resolves today’s Daf Yomi.
 - Finds the best matching MDY shiur.
-- Opens a local YouTube IFrame player.
+- Opens a floating, movable Electron companion with an embedded YouTube IFrame player.
 - Pauses when Claude Code stops, asks for permission, idles, or ends the session.
 - Resumes from saved progress.
 - Tracks watched minutes, coding minutes, dafim completed, and watch/coding ratio.
-- Serves a local dashboard.
+- Shows stats inside the Electron companion and serves a token-protected dashboard URL for diagnostics.
 - Keeps stats local by default.
 
 ## Quick Start
@@ -63,8 +63,8 @@ mdy-daf setup --language english --format full --timezone America/Chicago --guar
 | `mdy-daf today` | Print the Daf Yomi for a date. |
 | `mdy-daf resolve` | Resolve a date to the best MDY video candidate. |
 | `mdy-daf prepare` | Resolve and store the current shiur for playback. |
-| `mdy-daf open-player` | Start daemon and open the local player. |
-| `mdy-daf open-dashboard` | Start daemon and open the local dashboard. |
+| `mdy-daf open-player` | Start daemon and open the floating Electron companion. |
+| `mdy-daf open-dashboard` | Start daemon and open the Electron companion directly to Stats. |
 | `mdy-daf stats` | Print today’s local watched/coding stats. |
 
 ## Runtime Model
@@ -72,7 +72,7 @@ mdy-daf setup --language english --format full --timezone America/Chicago --guar
 - Hooks forward Claude lifecycle events to a local daemon.
 - The daemon binds to `127.0.0.1` and requires a random bearer token.
 - Persistent data goes under `${CLAUDE_PLUGIN_DATA}`.
-- The player uses the YouTube IFrame API.
+- The Electron companion uses the YouTube IFrame API.
 - Video files are never downloaded, mirrored, or redistributed.
 
 ## Compatibility
@@ -105,4 +105,3 @@ npm run check
 ## Privacy
 
 See [PRIVACY.md](PRIVACY.md). Default behavior is local-only and does not store prompt text, source code, transcript content, file contents, or raw tool inputs.
-

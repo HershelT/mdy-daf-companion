@@ -8,7 +8,7 @@ This guide covers installing MDY Daf Companion as a Claude Code plugin and valid
 
 - Claude Code with the `/plugin` command available.
 - Node.js 24 or newer.
-- Local machine access for the player daemon and browser window.
+- Local machine access for the daemon and floating Electron companion.
 - Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
 
 ## Install From This Repository
@@ -72,7 +72,7 @@ Prepare and open:
 ```bash
 mdy-daf prepare
 mdy-daf open-player
-mdy-daf open-dashboard
+mdy-daf stats
 ```
 
 ## Claude Code CLI
@@ -89,6 +89,8 @@ mdy-daf prepare
 mdy-daf open-player
 mdy-daf open-dashboard
 ```
+
+`mdy-daf open-dashboard` opens the same Electron companion directly to the Stats view. A token-protected diagnostic URL is still available through `mdy-daf dashboard-url`.
 
 Expected resolver sanity check:
 
@@ -142,7 +144,7 @@ Recommended behavior:
 
 - Use local sessions for automatic playback.
 - For SSH/dev containers, use remote-safe mode or port forwarding.
-- Do not expect automatic browser launch to work from a remote host without additional setup.
+- Do not expect the Electron companion to appear on your local desktop from a remote host without additional setup.
 
 Unsupported:
 
@@ -186,10 +188,10 @@ npm run build
 Run:
 
 ```bash
-mdy-daf player-url
+mdy-daf open-player
 ```
 
-Open the printed URL manually in your browser.
+If Electron does not open, run `npm install` in `mdy-daf-companion`, then rerun `mdy-daf open-player`. The product intentionally does not fall back to a regular browser video player.
 
 ### Resolver Cannot Find A Shiur
 
@@ -200,4 +202,3 @@ mdy-daf resolve --date 2026-04-19
 ```
 
 If this fails, check internet access and whether YouTube/MDY page structure changed. Optional `youtube_api_key` improves metadata lookup.
-
