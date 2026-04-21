@@ -20,10 +20,26 @@ npm run check
 Result:
 
 - TypeScript build passed.
-- 65 Node tests passed.
+- 66 Node tests passed.
 - `claude plugin validate .` passed.
 - Smoke doctor passed.
 - Smoke confirmed packaged Electron companion detection.
+
+## Clean First-Run Current-Daf Verification
+
+Command run:
+
+```bash
+npm run verify:current-daf
+```
+
+Result on April 21, 2026 in `America/Chicago`:
+
+- Expected Daf Yomi from Hebcal: `Menachos 100`.
+- Resolved title: `Daf Yomi Menachos Daf 100 by R' Eli Stefansky`.
+- Resolved video id: `Mv-DhwmEAFE`.
+- Source URL: `https://www.youtube.com/watch?v=Mv-DhwmEAFE`.
+- Clean-first-run mode was enabled, with no setup file required.
 
 ## Windows Packaged Companion
 
@@ -40,6 +56,24 @@ Result:
 - `mdy-daf prepare --date 2026-04-20` resolved Menachos 99 to `H9vgAHT7aKo`.
 - `mdy-daf open-player` launched the packaged `.exe`.
 - Electron loaded `/companion`, captured `companion-last.png`, and rendered nonblank YouTube content.
+
+## Release Packaging Dry Run
+
+Commands run:
+
+```bash
+npm run release:prepare:win
+npm publish --dry-run
+```
+
+Result:
+
+- Windows companion package was rebuilt after closing stale packaged processes.
+- `npm run check` passed.
+- `npm run verify:current-daf` passed.
+- `npm pack --dry-run` and `npm publish --dry-run` included the plugin files, compiled runtime, docs, and packaged Windows/Linux companion folders currently present in `out/`.
+- `npm run release:verify-packages` verified Windows/Linux and correctly failed locally for missing macOS bundles; the all-platform release check must run in GitHub Actions or on a workspace that has generated `darwin-arm64` and `darwin-x64`.
+- Actual `npm publish` was not run locally because npm authentication was not configured; use `npm login` or the GitHub workflow with `NPM_TOKEN`.
 
 ## Real Claude Code CLI Smoke
 

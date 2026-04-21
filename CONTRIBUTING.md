@@ -16,6 +16,7 @@ Run:
 
 ```bash
 npm run check
+npm run verify:current-daf
 ```
 
 This runs:
@@ -32,8 +33,9 @@ This runs:
 - Do not download, mirror, transcode, or redistribute YouTube videos.
 - Use official/public sources and isolate scraping behind source adapters.
 - Add tests for resolver edge cases, date boundaries, hook behavior, and privacy-sensitive changes.
+- Keep public docs current when install, release, compatibility, Electron behavior, or first-run behavior changes.
+- Repackage Electron when companion shell, player UI, launcher behavior, Electron dependencies, or bundled runtime files change.
 
 ## Commit Guidelines
 
 Use focused commits with concise messages. Do not add `Co-authored-by` trailers.
-

@@ -37,10 +37,9 @@ npm run build && node --test "dist/test/hooks.test.ts"
 node dist/src/cli.js doctor
 node dist/src/cli.js today
 node dist/src/cli.js resolve
-node dist/src/cli.js setup --language english --format full --timezone America/Chicago
-node dist/src/cli.js prepare
 node dist/src/cli.js open-player
 node dist/src/cli.js open-dashboard
+node dist/src/cli.js stats
 
 # Run daemon directly for debugging
 node dist/src/cli.js daemon
@@ -52,19 +51,19 @@ node dist/src/cli.js start-daemon
 ### Plugin Installation and Testing
 
 ```bash
-# Build and package for release
+# Build and package for release or local UI validation
 npm run package:companion:win    # Windows x64
 npm run package:companion:mac    # macOS arm64 + x64
 npm run package:companion:linux  # Linux x64
+npm run verify:current-daf       # Clean first-run current-daf verification
 
-# Install to local marketplace (after packaging)
+# Run Claude Code with the plugin directory directly before public release
 cd ..
-claude plugin validate .
-claude plugin marketplace add ./ --scope local
-claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
-
-# Or run Claude Code with the plugin directory directly
 claude --plugin-dir ./mdy-daf-companion
+
+# After npm publication and GitHub marketplace push
+claude plugin marketplace add OWNER/REPO
+claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
 ## High-Level Architecture
@@ -201,14 +200,18 @@ The setup command writes these to the plugin data directory.
 For public release:
 
 1. Build and test locally: `npm run check`
-2. Package for each platform:
+2. Verify clean first-run current-Daf resolution: `npm run verify:current-daf`
+3. Package for each platform:
    ```bash
    npm run package:companion:win
    npm run package:companion:mac
    npm run package:companion:linux
    ```
-3. The output folders in `out/` include bundled Electron binaries so users do not need `npm install` or the dev Electron dependency.
-4. Validate the packaged artifacts match the plugin manifest and contain all necessary files.
+4. The output folders in `out/` include bundled Electron binaries so users do not need `npm install` or the dev Electron dependency.
+5. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it builds platform bundles, runs `npm run release:prepare`, and can publish with `NPM_TOKEN`.
+6. After publication, users install from the GitHub marketplace with `claude plugin marketplace add OWNER/REPO` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
+
+Repackage Electron whenever `desktop/electron/**`, `src/player/**`, companion launcher behavior, Electron dependencies, or packaged runtime files change.
 
 ## Troubleshooting
 

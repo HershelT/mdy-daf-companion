@@ -74,7 +74,7 @@ Exit status: useful local stats implemented; catch-up planning remains a product
 
 ## Phase 7: Product Polish
 
-- Completed: First-run setup.
+- Completed: Optional setup command with no-setup-required defaults.
 - Completed: Settings guided command.
 - Completed: Design pass for player and dashboard.
 - Completed: Error states and `doctor` command.
@@ -88,7 +88,9 @@ Exit status: beta-ready.
 - Completed: Cross-platform packaging wrappers.
 - Completed: Electron Packager release scripts and Windows packaged companion smoke.
 - Completed: Plugin user configuration.
-- Partial: Marketplace metadata.
+- Completed: npm-backed marketplace metadata.
+- Completed: GitHub Actions release workflow for platform packaging and npm publish.
+- Completed: Current-Daf first-run verifier.
 - Completed: Versioning and changelog.
 - Pending: Beta testing with real Claude Code users.
 - Pending: Legal/brand review.

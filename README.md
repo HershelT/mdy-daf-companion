@@ -1,25 +1,23 @@
 # MDY Daf Companion
 
-MDY Daf Companion is a Claude Code plugin for developers who learn Daf Yomi. It resolves the latest Rabbi Eli Stefansky / Mercaz Daf Yomi shiur, opens a floating Electron YouTube companion while Claude Code works, pauses when Claude waits for you, saves your place, and tracks local learning/coding stats.
+MDY Daf Companion is a Claude Code plugin for Daf Yomi learners. It resolves the current Rabbi Eli Stefansky / Mercaz Daf Yomi shiur, opens it in a small floating Electron companion while Claude Code works, pauses when Claude stops or asks for input, saves playback progress, and turns coding time into local learning stats.
 
-The plugin is local-first: playback uses the YouTube IFrame API, state is stored on your machine, and no prompt text, source code, transcript content, or raw tool input is stored by default.
+The product is local-first. Video playback uses YouTube's embedded player, the daemon binds to `127.0.0.1`, and prompt text, source code, file contents, transcript content, and raw tool input are not stored by default.
 
-> Independent project. Not affiliated with or endorsed by Mercaz Daf Yomi unless a future partnership is established.
+This is an independent project. It is not affiliated with or endorsed by Mercaz Daf Yomi, Rabbi Eli Stefansky, YouTube, Google, Anthropic, or Claude unless a future partnership is explicitly announced.
 
-## Features
+## What It Does
 
 - Resolves the current Daf Yomi through Hebcal.
-- Finds MDY shiur candidates from layered sources:
-  - MDY app page extraction.
-  - Optional YouTube Data API.
-  - Public MDY YouTube channel page fallback.
-- Scores candidates by masechta, daf, language, format, duration, source, and exclusion rules.
-- Plays through a movable, always-on-top Electron companion using the YouTube IFrame API.
-- Automatically maps Claude lifecycle hooks to play/pause/prepare behavior.
-- Saves playback progress and resumes from the last position.
-- Tracks watched minutes, coding minutes, completion counts, and watch/coding ratio.
-- Provides stats inside the Electron companion.
-- Includes Shabbos guard and a Hebcal Yom Tov guard adapter.
+- Finds the best matching MDY shiur through layered MDY/YouTube source adapters.
+- Opens a movable, always-on-top Electron companion with a full-window YouTube video.
+- Starts or resumes playback from Claude Code lifecycle hooks.
+- Pauses and saves progress when Claude stops, idles, asks for permission, fails a stop, or ends a session.
+- Keeps the companion open and paused after Claude stops so the learner can continue manually.
+- Shows Stats inside the same Electron companion; there is no browser dashboard.
+- Tracks watched minutes, coding minutes, dafim completed, videos touched, streak-oriented data, and watch/coding ratio.
+- Stores settings, progress, and aggregate stats locally by default.
+- Includes Shabbos and Yom Tov guard behavior.
 - Supports Claude Code CLI local sessions, Claude Desktop local sessions, and local VS Code extension sessions.
 
 ## Requirements
@@ -27,154 +25,200 @@ The plugin is local-first: playback uses the YouTube IFrame API, state is stored
 - Claude Code with plugin support.
 - Node.js 24 or newer.
 - Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
-- A local Claude Code session for automatic Electron companion control.
-- For release packaging: Electron Packager through `npm run package:companion:*`.
+- A local Claude session for automatic Electron playback.
 
-Remote/cloud Claude sessions are not supported for local playback. The plugin detects `CLAUDE_CODE_REMOTE=true` and disables daemon startup in that environment. The product no longer opens a regular browser video player; the supported playback surface is the Electron companion.
+Remote/cloud Claude sessions are not supported for local playback. SSH and dev-container sessions are partial because the daemon and Electron companion run wherever Claude Code runs.
 
-## Install From Public Marketplace
+## Install After Public Release
 
-After the npm package is published and this repository is on GitHub, users install with:
+After this repository is pushed to GitHub and the npm package `mdy-daf-companion` is published, users install it through the Claude Code marketplace:
 
 ```bash
 claude plugin marketplace add OWNER/REPO
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
-No setup command is required. Start Claude Code normally and submit a prompt; the plugin resolves today's Daf Yomi, opens the Electron companion, and starts playback when safe. Preferences can still be changed later with `/mdy-daf-companion:setup`.
+Replace `OWNER/REPO` with the GitHub repository that contains `.claude-plugin/marketplace.json`.
 
-## Local Development Install
+No setup command is required. Start Claude Code normally and submit a prompt. The first prompt should resolve today's Daf Yomi, open the Electron companion, and start playback when the Shabbos/Yom Tov guard allows it.
 
-Build and package the local runtime first:
+Optional commands after install:
+
+```text
+/mdy-daf-companion:status
+/mdy-daf-companion:dashboard
+/mdy-daf-companion:setup
+```
+
+## Local Test Before Publishing
+
+Use this path while developing or before the npm package exists. It does not require marketplace installation.
 
 ```bash
 cd mdy-daf-companion
 npm install
-npm run package:companion:win     # Windows x64
-npm run package:companion:mac     # macOS arm64 + x64, run on macOS for signing/notarization
-npm run package:companion:linux   # Linux x64
+npm run package:companion:win
 npm run check
+npm run verify:current-daf
 cd ..
-```
-
-For development, `npm install` is enough because the launcher can use the local Electron runtime. For a release zip or marketplace package, include the matching `out/mdy-daf-companion-<platform>-<arch>` folder so users do not need the dev Electron dependency.
-
-On Windows, the package script runs a preflight that closes stale packaged `mdy-daf-companion.exe` processes from `out\` and removes the old output folder before rebuilding. If Windows still reports `EPERM` on a DLL, close the companion window and pause OneDrive or antivirus scanning for the release folder, then rerun the same command.
-
-### Option 1: Local Marketplace Install
-
-After the npm package has been published, test the marketplace from this repository root:
-
-```bash
-claude plugin validate .
-claude plugin marketplace add ./ --scope local
-claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
-```
-
-Then start or reload Claude Code:
-
-```text
-/reload-plugins
-```
-
-### Option 2: Development Session
-
-Use this when actively editing the plugin:
-
-```bash
 claude --plugin-dir ./mdy-daf-companion
 ```
 
-Claude Code gives local `--plugin-dir` plugins priority for that session.
+On macOS or Linux, replace the package command:
 
-## Release And Updates
+```bash
+npm run package:companion:mac
+npm run package:companion:linux
+```
 
-See [docs/release-and-updates.md](docs/release-and-updates.md) for the publish workflow, current-Daf verification, and update process.
+Inside the Claude session launched with `--plugin-dir`, submit a normal prompt. Expected behavior:
 
-## First Run
+1. `SessionStart` starts the daemon and prepares today's shiur.
+2. `UserPromptSubmit` requests playback.
+3. The Electron companion opens or refocuses.
+4. Playback pauses when Claude stops or asks for input.
+5. `/mdy-daf-companion:stats` shows local watch/coding stats.
 
-No command is required for the default flow. The first local Claude Code prompt triggers auto-resolve and auto-open. Optional health and preference commands:
+For a manual smoke test:
+
+```bash
+cd mdy-daf-companion
+node dist/src/cli.js doctor
+node dist/src/cli.js open-player
+node dist/src/cli.js open-dashboard
+node dist/src/cli.js stats
+```
+
+## How The Current Shiur Is Chosen
+
+The resolver does not simply pick the newest upload. MDY may publish Hebrew shiurim, English shiurim, chazarah, full Daf, adjacent dafim, short clips, events, and announcements close together.
+
+The plugin:
+
+1. Computes the current civil date in the configured timezone.
+2. Asks Hebcal for the Daf Yomi on that date.
+3. Collects candidates from MDY app/page extraction, optional YouTube Data API, and public MDY YouTube channel fallback.
+4. Parses titles for masechta, daf, language, format, duration, and exclusion hints.
+5. Excludes events, promos, unrelated shorts, donation clips, and announcements.
+6. Scores daf match, masechta match, language preference, format preference, duration, source confidence, and recency.
+7. Stores the selected shiur and saved position locally.
+
+Clean first-run resolution is verified with:
+
+```bash
+cd mdy-daf-companion
+npm run verify:current-daf
+```
+
+That verifier creates a temporary clean data directory, uses no setup file, asks Hebcal for today's Daf Yomi, resolves through the daemon, and fails if the selected shiur does not match the expected masechta and daf.
+
+## Electron Companion Behavior
+
+- The YouTube video fills the window.
+- Controls appear as translucent overlays when hovering or focusing the companion.
+- The top overlay can be dragged to move the window.
+- Window size, position, and always-on-top state are saved locally.
+- The `Stats` button switches the same companion into the dashboard view.
+- The `X`, minimize, and pin controls appear on hover/focus and remain visible on touch or no-hover displays.
+- Closing the companion does not stop the daemon; the next prompt or `/play` can reopen it.
+- There is no regular browser player and no browser fallback.
+
+The companion intentionally stays open when Claude finishes a turn. Best practice for this product is to pause and save progress, then leave control with the learner. Auto-closing would interrupt someone who wants to keep watching and would make the window jump in and out during normal Claude work.
+
+## Commands
+
+When installed, the package exposes `mdy-daf` on the plugin PATH.
+
+| Command | Purpose |
+| --- | --- |
+| `mdy-daf doctor` | Check runtime, plugin files, Electron, data directory, and SQLite. |
+| `mdy-daf today` | Print the Daf Yomi for a date. |
+| `mdy-daf resolve` | Resolve a date to the best MDY video candidate. |
+| `mdy-daf prepare` | Resolve and store the current shiur. |
+| `mdy-daf open-player` | Start daemon, request playback, and open the Electron companion. |
+| `mdy-daf open-dashboard` | Open the same Electron companion directly to Stats. |
+| `mdy-daf play` / `mdy-daf resume` | Set playback state to playing. |
+| `mdy-daf pause` | Pause and save progress. |
+| `mdy-daf stats` | Print today's watched/coding summary. |
+| `mdy-daf status` | Print daemon, current daf, and playback status. |
+| `mdy-daf setup` | Optional preference tuning for language, format, timezone, guard, and auto-open. |
+
+Slash commands:
 
 ```text
+/mdy-daf-companion:play
+/mdy-daf-companion:pause
+/mdy-daf-companion:dashboard
+/mdy-daf-companion:stats
 /mdy-daf-companion:status
 /mdy-daf-companion:setup
 ```
 
-For direct CLI preference changes:
+## Release On GitHub
+
+This repository is structured as a Claude Code marketplace repository plus an npm package.
+
+1. Create a public GitHub repository.
+2. Push this repository:
 
 ```bash
-mdy-daf setup --language english --format full --timezone America/Chicago --guard true --auto-open true
+git remote add origin https://github.com/OWNER/REPO.git
+git push -u origin main
 ```
 
-Optional manual resolve:
-
-```text
-/mdy-daf-companion:prepare
-```
-
-Optional manual open:
-
-```text
-/mdy-daf-companion:play
-```
-
-Open the in-companion stats dashboard, or use the `Stats` button in the Electron companion:
-
-```text
-/mdy-daf-companion:dashboard
-```
-
-Check health:
-
-```text
-/mdy-daf-companion:status
-```
-
-## Direct CLI Commands
-
-When the plugin is enabled, its `bin/` directory is added to Claude Code’s plugin PATH. The runtime command is:
+3. Add an npm automation token as the GitHub secret `NPM_TOKEN`.
+4. Open GitHub Actions and run `Release MDY Daf Companion`.
+5. Set the workflow input `publish` to `true` for the real release.
+6. Confirm npm published `mdy-daf-companion@0.1.0`.
+7. Users install with:
 
 ```bash
-mdy-daf doctor
-mdy-daf setup --language english --format full --timezone America/Chicago
-mdy-daf today --date 2026-04-20
-mdy-daf resolve --date 2026-04-19
-mdy-daf prepare
-mdy-daf open-player
-mdy-daf open-dashboard
-mdy-daf stats
+claude plugin marketplace add OWNER/REPO
+claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
-For local repository testing without installing:
+The workflow builds Electron bundles on Windows, Linux, and macOS, downloads them into `mdy-daf-companion/out`, runs release verification, and publishes the self-contained npm package.
+
+Manual publish is possible only from a machine or CI workspace that already has all platform bundles in `mdy-daf-companion/out`:
+
+```bash
+cd mdy-daf-companion
+npm login
+npm run release:prepare
+npm publish
+```
+
+## Updating After Release
+
+For public updates:
+
+1. Make changes.
+2. Bump the version in:
+   - `mdy-daf-companion/package.json`
+   - `mdy-daf-companion/.claude-plugin/plugin.json`
+   - `.claude-plugin/marketplace.json`
+3. Repackage Electron if player, launcher, desktop shell, bundled runtime, or Electron dependencies changed.
+4. Run:
 
 ```bash
 cd mdy-daf-companion
 npm run check
-node dist/src/cli.js doctor
-node dist/src/cli.js prepare
-node dist/src/cli.js open-player
-node dist/src/cli.js open-dashboard
+npm run verify:current-daf
 ```
 
-## How Video Resolution Works
+5. Run the GitHub release workflow with `publish=true`.
+6. Tag the release:
 
-The resolver does not simply pick the newest upload. That would often choose the wrong video because MDY may upload Hebrew shiurim, chazarah, full Daf, and adjacent dafim close together.
+```bash
+git tag vX.Y.Z
+git push origin main --tags
+```
 
-Instead, the plugin:
+Users update from the marketplace:
 
-1. Gets the Daf Yomi for the configured date/timezone from Hebcal.
-2. Collects MDY video candidates from available source adapters.
-3. Parses each candidate title for masechta, daf number, language, and format.
-4. Excludes events, siyumim, promos, shorts, and announcements.
-5. Scores candidates using daf match, masechta match, language preference, format preference, duration, and source confidence.
-6. Stores the selected shiur and player progress locally.
-
-Verified live example:
-
-```text
-2026-04-19: Menachos 98 -> Daf Yomi Menachos Daf 98 by R' Eli Stefansky
-https://www.youtube.com/watch?v=2qz8rC9Yh_k
-confidence 0.87
+```bash
+claude plugin marketplace update mdy-daf-companion
+claude plugin update mdy-daf-companion@mdy-daf-companion
 ```
 
 ## Compatibility
@@ -182,73 +226,57 @@ confidence 0.87
 | Surface | Support | Notes |
 | --- | --- | --- |
 | Claude Code CLI local | Supported | Best-tested local path. |
-| Claude Desktop local | Supported target | Plugins are available in local Desktop sessions; validate Node availability. |
-| VS Code extension local | Supported target | Shares Claude Code settings/hook behavior with CLI; validate in your local extension session. |
-| Desktop SSH | Partial | Plugin runs on the SSH host; the Electron companion would open on that host unless a local bridge is added. |
-| VS Code Remote SSH/dev containers | Partial | Same remote-host caveat as SSH. |
-| Desktop remote/cloud | Unsupported | Claude docs say plugins are unavailable for remote Desktop sessions. |
-| Claude Code web/cloud | Unsupported | No local daemon/Electron companion surface. |
+| Claude Desktop local | Supported target | Requires Node to be visible to Desktop's local environment. |
+| VS Code extension local | Supported target | Uses the same Claude Code plugin system; validate hooks from the chat panel. |
+| Desktop SSH | Partial | The plugin runs on the SSH host; Electron opens there unless bridged. |
+| VS Code Remote SSH/dev containers | Partial | Same remote-host caveat. |
+| Desktop remote/cloud | Unsupported | No local plugin/Electron surface for this product. |
+| Claude Code web/cloud | Unsupported | No local daemon/Electron surface. |
 
-See [Install And Compatibility](docs/install-and-compatibility.md).
+See [docs/install-and-compatibility.md](docs/install-and-compatibility.md) and [mdy-daf-companion/DESKTOP_AND_VSCODE_VALIDATION.md](mdy-daf-companion/DESKTOP_AND_VSCODE_VALIDATION.md).
 
-## Development
+## Verification
+
+Core checks:
 
 ```bash
 cd mdy-daf-companion
-npm install
 npm run check
+npm run verify:current-daf
+npm publish --dry-run
 ```
 
-`npm run check` runs:
+Windows release candidate:
 
-- TypeScript build.
-- Node test suite.
-- Claude plugin validation.
-- Smoke checks.
+```bash
+npm run release:prepare:win
+```
 
-Current automated coverage includes hook parsing, daemon auth, Electron companion rendering, in-companion dashboard data, progress persistence, resolver scoring, source adapters, stats, setup, guards, release surface checks, and plugin surface detection.
+All-platform release candidate:
+
+```bash
+npm run release:prepare
+```
+
+`release:prepare` requires Windows, Linux, and macOS companion bundles to already exist in `out/`; normally GitHub Actions creates them.
 
 ## Documentation
 
+- [Plugin Package README](mdy-daf-companion/README.md)
 - [Install And Compatibility](docs/install-and-compatibility.md)
+- [Release And Updates](docs/release-and-updates.md)
+- [Release Validation Log](docs/release-validation-log.md)
 - [Product Spec](docs/product-spec.md)
 - [Technical Architecture](docs/technical-architecture.md)
-- [Implementation Roadmap](docs/implementation-roadmap.md)
-- [Progress Ledger](docs/progress-ledger.md)
-- [Release Validation Log](docs/release-validation-log.md)
+- [Testing Strategy](docs/testing-strategy.md)
 - [Privacy](mdy-daf-companion/PRIVACY.md)
 - [Security](mdy-daf-companion/SECURITY.md)
 - [Support](mdy-daf-companion/SUPPORT.md)
-- [Desktop And VS Code Validation](mdy-daf-companion/DESKTOP_AND_VSCODE_VALIDATION.md)
-- [Release And Marketing](docs/release-and-marketing.md)
-- [Claude Code Surface Research](docs/research/claude-code-surface-compatibility.md)
-- [MDY Domain Research](docs/research/mdy-domain-research.md)
-
-## Privacy
-
-By default, MDY Daf Companion stores only local operational data:
-
-- Settings.
-- Resolved shiur metadata.
-- Playback progress.
-- Hook event categories.
-- Daily watched/coding aggregates.
-
-It does not store prompt text, transcript content, source code, file contents, or raw tool inputs by default. See [Privacy](mdy-daf-companion/PRIVACY.md).
 
 ## Release Status
 
-This repository is a local beta release candidate. Automated checks pass, the plugin validates, the runtime is bundled, and the local marketplace manifest is present.
-
-Still required before public launch:
-
-- Hands-on Claude Desktop local validation on macOS and Windows.
-- Hands-on VS Code extension local validation.
-- SSH/dev-container port-forwarding validation.
-- macOS and Linux Electron companion launch smoke tests.
-- Brand/legal review before public marketing.
-- Optional MDY permission or partnership outreach.
+This repository is a release candidate. Automated tests, plugin validation, smoke checks, Windows packaged companion launch, live current-Daf verification, npm dry-run packaging, and real Claude Code CLI hook smoke have passed locally. Public release still needs hands-on validation in Claude Desktop local sessions, VS Code extension local sessions, macOS package launch/signing, Linux package launch, and brand/legal review.
 
 ## License
 
-MIT. See [LICENSE](mdy-daf-companion/LICENSE).
+MIT. See [mdy-daf-companion/LICENSE](mdy-daf-companion/LICENSE).

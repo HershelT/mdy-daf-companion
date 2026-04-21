@@ -17,12 +17,14 @@
 - Added doctor checks.
 - Added packaged Electron companion detection.
 - Added Electron-only launcher with no regular browser fallback.
-- Added first-run setup command.
+- Added optional setup command with no-setup-required defaults.
 - Added Shabbos guard and Hebcal Yom Tov guard adapter.
 - Added multi-source resolver providers and SQLite cache.
 - Added in-companion Stats dashboard.
 - Added cross-platform CLI wrappers.
 - Added Claude plugin user configuration.
 - Added smoke checks and install/compatibility documentation.
+- Added clean first-run current-Daf verification.
+- Added npm package publishing metadata and GitHub Actions release workflow.
 - Added release-surface tests to keep `/player` and `/dashboard` browser routes removed.
 - Added security, support, and Desktop/VS Code validation docs.

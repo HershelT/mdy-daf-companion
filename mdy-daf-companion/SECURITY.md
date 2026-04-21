@@ -44,6 +44,8 @@ Do not include private prompts, source code, API keys, or shiur account credenti
 Before public release:
 
 - Run `npm run check`.
+- Run `npm run verify:current-daf`.
+- Run `npm publish --dry-run`.
 - Run `claude plugin validate .`.
 - Run `mdy-daf doctor`.
 - Verify `/player` and `/dashboard` standalone HTML routes remain removed.

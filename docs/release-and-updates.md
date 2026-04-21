@@ -99,11 +99,30 @@ npm view mdy-daf-companion version
 
 `npm view` should return `E404` before the first public release, meaning the package name is not currently published.
 
+Create and push the GitHub marketplace repository:
+
+```bash
+git remote add origin https://github.com/OWNER/REPO.git
+git push -u origin main
+```
+
+The root `.claude-plugin/marketplace.json` references the npm package source. Public install will not work until both pieces exist:
+
+- The GitHub repository is reachable by Claude Code as `OWNER/REPO`.
+- `mdy-daf-companion@0.1.0` is published to npm.
+
 To publish through GitHub Actions:
 
 1. Add `NPM_TOKEN` as a repository secret.
 2. Run `Release MDY Daf Companion`.
 3. Set `publish` to `true`.
+4. Confirm the workflow publishes `mdy-daf-companion@0.1.0`.
+5. Validate public install from a clean Claude Code session:
+
+```bash
+claude plugin marketplace add OWNER/REPO
+claude plugin install mdy-daf-companion@mdy-daf-companion
+```
 
 To publish manually from a machine that already has all platform bundles in `mdy-daf-companion/out`:
 
@@ -112,6 +131,8 @@ cd mdy-daf-companion
 npm run release:prepare
 npm publish
 ```
+
+Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login` or use the GitHub workflow with `NPM_TOKEN`.
 
 ## Updating Efficiently
 

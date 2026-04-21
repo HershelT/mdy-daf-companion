@@ -17,6 +17,7 @@ For repository development:
 
 ```bash
 npm run check
+npm run verify:current-daf
 ```
 
 For packaged companion validation:
@@ -40,6 +41,17 @@ Rerun `npm run package:companion:win` after closing the companion window. The pa
 Run `mdy-daf doctor`. A release install should include a matching `out/mdy-daf-companion-<platform>-<arch>` folder. A development install needs `npm install` so the local Electron runtime exists.
 
 The plugin intentionally does not open a regular browser fallback.
+
+### The Wrong Daf Appears
+
+Run:
+
+```bash
+npm run verify:current-daf
+mdy-daf resolve
+```
+
+The verifier uses a clean data directory and compares the resolved shiur against Hebcal's Daf Yomi for today's date in the default timezone. If it fails, include the resolved title, expected daf, timezone, and source URL in the bug report.
 
 ### The Dashboard Opens The Video Window
 
