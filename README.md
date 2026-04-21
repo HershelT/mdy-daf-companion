@@ -28,10 +28,25 @@ The plugin is local-first: playback uses the YouTube IFrame API, state is stored
 - Node.js 24 or newer.
 - Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
 - A local Claude Code session for automatic Electron companion control.
+- For release packaging: Electron Packager through `npm run package:companion:*`.
 
 Remote/cloud Claude sessions are not supported for local playback. The plugin detects `CLAUDE_CODE_REMOTE=true` and disables daemon startup in that environment. The product no longer opens a regular browser video player; the supported playback surface is the Electron companion.
 
 ## Install
+
+Build and package the local runtime first:
+
+```bash
+cd mdy-daf-companion
+npm install
+npm run package:companion:win     # Windows x64
+npm run package:companion:mac     # macOS arm64 + x64, run on macOS for signing/notarization
+npm run package:companion:linux   # Linux x64
+npm run check
+cd ..
+```
+
+For development, `npm install` is enough because the launcher can use the local Electron runtime. For a release zip or marketplace package, include the matching `out/mdy-daf-companion-<platform>-<arch>` folder so users do not need the dev Electron dependency.
 
 ### Option 1: Local Marketplace Install
 
@@ -120,6 +135,7 @@ npm run check
 node dist/src/cli.js doctor
 node dist/src/cli.js prepare
 node dist/src/cli.js open-player
+node dist/src/cli.js open-dashboard
 ```
 
 ## How Video Resolution Works
@@ -172,7 +188,7 @@ npm run check
 - Claude plugin validation.
 - Smoke checks.
 
-Current automated coverage includes hook parsing, daemon auth, Electron companion rendering, in-companion dashboard data, progress persistence, resolver scoring, source adapters, stats, dashboard rendering, setup, guards, and plugin surface detection.
+Current automated coverage includes hook parsing, daemon auth, Electron companion rendering, in-companion dashboard data, progress persistence, resolver scoring, source adapters, stats, setup, guards, release surface checks, and plugin surface detection.
 
 ## Documentation
 

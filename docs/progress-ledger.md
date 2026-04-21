@@ -1,6 +1,6 @@
 # Progress Ledger
 
-Last updated: April 20, 2026.
+Last updated: April 21, 2026.
 
 ## Completed
 
@@ -25,8 +25,8 @@ Last updated: April 20, 2026.
 - Player resume position.
 - Player seek controls.
 - Mark-watched control.
-- YouTube source link.
-- Local dashboard with current shiur and stats.
+- Electron-only companion route with no regular browser player fallback.
+- In-companion Stats dashboard with current shiur and watched/coding metrics.
 - Daily watched/coding stats.
 - First-run setup command.
 - Shabbos guard by local timezone.
@@ -34,6 +34,9 @@ Last updated: April 20, 2026.
 - Remote/cloud environment guard.
 - Cross-platform player launcher.
 - Cross-platform CLI wrappers.
+- Electron Packager scripts for Windows, macOS, and Linux companion bundles.
+- Packaged companion detection in `mdy-daf doctor`.
+- Release-surface tests that block browser opener/dashboard regressions.
 - Plugin `userConfig` schema.
 - Release/privacy docs.
 - Install/compatibility guide.
@@ -45,9 +48,10 @@ Last updated: April 20, 2026.
 - `npm run check` passes.
 - `claude plugin validate .` passes.
 - `npm run smoke` passes.
-- 56 automated tests pass.
+- 65 automated tests pass.
 - Live Daf lookup for April 20, 2026 returns Menachos 99.
 - Live resolver has successfully matched April 19, 2026 Menachos 98 to `2qz8rC9Yh_k`.
+- Windows packaged companion smoke test resolved April 20, 2026 Menachos 99 to `H9vgAHT7aKo`, opened `out/mdy-daf-companion-win32-x64/mdy-daf-companion.exe`, and captured a nonblank YouTube render.
 - Commit log was scanned for `Co-authored-by` trailers and none were present.
 
 ## Remaining Real-World Validation
@@ -62,13 +66,13 @@ These cannot be fully proven from one Windows local workspace alone:
 - Test macOS local Electron companion launch.
 - Test Linux CLI Electron companion launch.
 - Confirm Node availability in Desktop environment on macOS and Windows.
+- Sign/notarize macOS release bundles and sign Windows release bundles before public distribution.
 - Brand/legal review before public marketing.
 - Direct MDY permission or partnership outreach.
 
 ## Next Product Enhancements
 
-- Full Yom Tov blocking in daemon using cached Hebcal guard result.
 - Better catch-up queue based on historical Daf Yomi rows.
-- More polished dashboard charts.
+- More polished dashboard charts beyond the current compact Stats view.
 - Optional cloud sync/supporter features.
 - Real marketplace publishing flow.

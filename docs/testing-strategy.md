@@ -46,6 +46,18 @@ Use real Electron companion smoke tests sparingly:
 - Controls are visible.
 - YouTube iframe loads.
 - Window layout works on small and large screens.
+- `mdy-daf open-dashboard` opens the same Electron companion in Stats mode.
+- No regular browser fallback exists when Electron is unavailable.
+
+## Release Surface Tests
+
+Guard the product decisions that should not regress:
+
+- `/player` and `/dashboard` standalone HTML routes return 404.
+- `/api/dashboard` remains available for the Electron companion.
+- Runtime source does not call `shell.openExternal` or other browser opener fallbacks.
+- Electron blocks external navigation instead of launching a browser.
+- Packaged companion lookup prefers `out/mdy-daf-companion-<platform>-<arch>` over the development Electron runtime.
 
 ## Claude Code Hook Contract Tests
 
@@ -95,7 +107,9 @@ Before release:
 
 - Run `claude plugin validate`.
 - Run unit and integration tests.
+- Run `npm run package:companion:win`, `npm run package:companion:mac`, and `npm run package:companion:linux` on appropriate build hosts.
 - Run Windows, macOS, and Linux smoke tests.
+- Launch a packaged companion through `mdy-daf open-player` and inspect the Electron capture/log.
 - Confirm no secrets or API keys are committed.
 - Verify README installation instructions.
 - Verify uninstall leaves user data policy clear.

@@ -17,6 +17,16 @@ This plugin is independent and is not affiliated with or endorsed by Mercaz Daf 
 
 ## Quick Start
 
+For a packaged local test, build the runtime and companion first:
+
+```bash
+npm install
+npm run package:companion:win     # Windows x64
+npm run package:companion:mac     # macOS arm64 + x64
+npm run package:companion:linux   # Linux x64
+npm run check
+```
+
 After installation, run these inside Claude Code:
 
 ```text
@@ -74,6 +84,7 @@ mdy-daf setup --language english --format full --timezone America/Chicago --guar
 - Persistent data goes under `${CLAUDE_PLUGIN_DATA}`.
 - The Electron companion uses the YouTube IFrame API.
 - Video files are never downloaded, mirrored, or redistributed.
+- No regular browser player or browser dashboard is shipped. `open-dashboard` opens the Stats view inside the same Electron companion.
 
 ## Compatibility
 
@@ -101,6 +112,8 @@ npm run check
 ```
 
 `npm run check` builds TypeScript, runs tests, validates the plugin manifest, and runs smoke checks.
+
+`npm run package:companion:win`, `npm run package:companion:mac`, and `npm run package:companion:linux` produce platform folders under `out/`. Release archives should include the matching packaged folder; source-only development can fall back to the local `electron` dependency after `npm install`.
 
 ## Privacy
 

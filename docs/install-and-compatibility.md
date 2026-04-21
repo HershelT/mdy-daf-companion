@@ -1,6 +1,6 @@
 # Install And Compatibility
 
-Last updated: April 20, 2026.
+Last updated: April 21, 2026.
 
 This guide covers installing MDY Daf Companion as a Claude Code plugin and validating it across Claude Code surfaces.
 
@@ -11,7 +11,37 @@ This guide covers installing MDY Daf Companion as a Claude Code plugin and valid
 - Local machine access for the daemon and floating Electron companion.
 - Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
 
+The plugin shape and testing workflow were checked against the current Claude Code docs for plugins, hooks, Desktop, and VS Code on April 21, 2026:
+
+- Plugins are `.claude-plugin` packages that can contain commands, skills, agents, hooks, MCP servers, and other assets.
+- `claude --plugin-dir ./mdy-daf-companion` is the direct local development path.
+- `claude plugin validate .`, marketplace add, and plugin install are the supported CLI validation/install flow.
+- Desktop supports plugins in local and SSH sessions; remote/cloud Desktop sessions do not provide the local plugin surface needed by this product.
+- VS Code plugin management uses the same Claude Code plugin system under the extension UI.
+- Hooks receive JSON on stdin and include the lifecycle events this plugin maps: `SessionStart`, `UserPromptSubmit`, `Notification`, `Stop`, `StopFailure`, `PreCompact`, `PostCompact`, and `SessionEnd`.
+
+Reference docs:
+
+- https://code.claude.com/docs/en/plugins
+- https://code.claude.com/docs/en/plugin-marketplaces
+- https://code.claude.com/docs/en/plugins-reference
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/desktop
+- https://code.claude.com/docs/en/vs-code
+
 ## Install From This Repository
+
+First build and package the companion. Electron Packager creates OS-specific folders such as `out/mdy-daf-companion-win32-x64`; release archives should include the relevant folder. Development installs can still use the local `electron` dependency after `npm install`.
+
+```bash
+cd mdy-daf-companion
+npm install
+npm run package:companion:win     # Windows x64
+npm run package:companion:mac     # macOS arm64 + x64
+npm run package:companion:linux   # Linux x64
+npm run check
+cd ..
+```
 
 From the repository root:
 
@@ -92,6 +122,14 @@ mdy-daf open-dashboard
 
 `mdy-daf open-dashboard` opens the same Electron companion directly to the Stats view. There is no separate browser dashboard in the release path.
 
+Prompt-submit validation:
+
+1. Set `auto_open_player=true` with setup.
+2. Start Claude Code locally with the plugin installed or with `claude --plugin-dir ./mdy-daf-companion`.
+3. Submit a normal prompt.
+4. Confirm the `UserPromptSubmit` hook starts the daemon, resolves the shiur if needed, opens the Electron companion, and sets playback state to `playing` unless the Shabbos/Yom Tov guard blocks it.
+5. Wait for Claude to stop or ask for permission and confirm the companion pauses.
+
 Expected resolver sanity check:
 
 ```text
@@ -111,8 +149,9 @@ Validation checklist:
 3. Confirm Node.js is visible to the Desktop environment.
 4. Run `/mdy-daf-companion:status`.
 5. Run `/mdy-daf-companion:prepare`.
-6. Run `/mdy-daf-companion:play` or `/mdy-daf-companion:dashboard`.
-7. Submit a normal coding prompt and confirm the video pauses when Claude waits.
+6. Run `/mdy-daf-companion:play` and confirm the floating Electron companion opens.
+7. Run `/mdy-daf-companion:dashboard` and confirm the same companion switches to Stats.
+8. Submit a normal coding prompt and confirm the video pauses when Claude waits.
 
 Known caveat:
 
@@ -120,9 +159,9 @@ Known caveat:
 
 ## VS Code Extension
 
-Status: supported target for local sessions, pending hands-on extension validation.
+Status: supported target for local sessions.
 
-Claude Code’s VS Code extension includes Claude Code and shares core settings such as hooks and MCP with the CLI. Install the plugin once, then validate from a local VS Code workspace.
+Claude Code’s VS Code extension includes Claude Code and provides plugin management from the extension UI. Install the plugin once, then validate from a local VS Code workspace.
 
 Validation checklist:
 
@@ -191,7 +230,14 @@ Run:
 mdy-daf open-player
 ```
 
-If Electron does not open, run `npm install` in `mdy-daf-companion`, then rerun `mdy-daf open-player`. The product intentionally does not fall back to a regular browser video player.
+If Electron does not open:
+
+1. Run `mdy-daf doctor`.
+2. For a release install, confirm the matching packaged companion folder exists under `out/`.
+3. For a development install, run `npm install` in `mdy-daf-companion`.
+4. Re-run `mdy-daf open-player`.
+
+The product intentionally does not fall back to a regular browser video player.
 
 ### Resolver Cannot Find A Shiur
 

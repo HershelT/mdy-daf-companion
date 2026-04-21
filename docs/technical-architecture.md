@@ -96,11 +96,12 @@ Daemon endpoints:
 - `POST /play`
 - `POST /pause`
 - `POST /resume`
-- `POST /progress`
+- `POST /api/progress`
+- `POST /api/resolve`
+- `POST /api/video`
 - `GET /status`
-- `GET /stats?range=today|week|cycle`
-- `GET /settings`
-- `PATCH /settings`
+- `GET /companion`
+- `GET /api/dashboard`
 - `GET /health`
 
 ### Player
@@ -116,6 +117,7 @@ Implementation target:
 
 - Local web app served by daemon inside Electron.
 - Floating Electron companion launched by the runtime.
+- Dashboard/stats view rendered inside the same Electron companion through `#stats`; no standalone browser dashboard route.
 - Production choice is Electron-only:
   - Electron adds packaging weight.
   - A dedicated companion gives reliable focus, always-on-top behavior, window placement persistence, and no regular browser-tab clutter.
@@ -123,6 +125,7 @@ Implementation target:
 Recommendation:
 
 - For public v1, use the Electron companion as the only video playback surface. If Electron is missing, report setup guidance and keep Claude Code running; do not open a regular browser fallback.
+- Package the companion with Electron Packager for Windows, macOS, and Linux release archives. Development installs can use the local `electron` dependency, but published releases should include the matching packaged folder under `out/`.
 
 ### Resolver
 

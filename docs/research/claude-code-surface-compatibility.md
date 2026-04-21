@@ -1,6 +1,6 @@
 # Claude Code Surface Compatibility
 
-Research date: April 20, 2026.
+Research date: April 21, 2026.
 
 Primary sources:
 
@@ -8,6 +8,8 @@ Primary sources:
 - `https://code.claude.com/docs/en/desktop`
 - `https://code.claude.com/docs/en/vs-code`
 - `https://code.claude.com/docs/en/plugins`
+- `https://code.claude.com/docs/en/plugin-marketplaces`
+- `https://code.claude.com/docs/en/plugins-reference`
 - `https://code.claude.com/docs/en/hooks`
 
 ## Executive Summary
@@ -22,7 +24,7 @@ MDY Daf Companion should work best in local Claude Code sessions: CLI, Desktop l
 | Claude Code Desktop, local | Yes | Desktop docs say Desktop uses the same underlying engine and supports plugin installation for local sessions. |
 | Claude Code Desktop, SSH | Partial | Plugins are available for SSH sessions, but the daemon/player would run on the SSH host. Needs port forwarding or a local companion mode. |
 | Claude Code Desktop, remote/cloud | No | Desktop docs explicitly say plugins are not available for remote sessions. |
-| VS Code extension, local | Likely yes | VS Code docs say settings such as hooks and MCP are shared with CLI, and the extension includes the CLI. Needs hands-on validation before public claims. |
+| VS Code extension, local | Yes target | VS Code docs say plugin management in VS Code uses the same CLI commands under the hood, and the extension includes the CLI. Needs hands-on extension validation before public launch. |
 | VS Code extension, dev container/remote SSH | Partial | Same issue as SSH: playback process runs remotely unless a local bridge is added. |
 | Claude Code on the web | No | Cloud sessions do not run local plugin hooks/Electron companion. |
 | Mobile monitoring / Remote Control of local session | Indirect | If the underlying session is local CLI/VS Code, hooks can run locally. Mobile itself does not host the player. |
@@ -42,7 +44,7 @@ Desktop:
 VS Code:
 
 - The VS Code extension includes the CLI.
-- Claude Code settings in `~/.claude/settings.json` are shared between the extension and CLI for allowed commands, environment variables, hooks, and MCP servers.
+- Plugin management in VS Code uses the same CLI commands under the hood.
 - Not all built-in Claude Code commands are available through the extension UI.
 - The extension can open Claude Code in terminal mode, which should behave closest to CLI.
 
@@ -51,6 +53,7 @@ Hooks:
 - Hook handlers run in the current directory with Claude Code's environment.
 - Hook docs expose `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_DATA}` for plugin scripts and persistent data.
 - `$CLAUDE_CODE_REMOTE` is set to `"true"` in remote web environments and is not set in the local CLI.
+- The relevant lifecycle events for this plugin are available: `SessionStart`, `UserPromptSubmit`, `Notification`, `Stop`, `StopFailure`, `PreCompact`, `PostCompact`, and `SessionEnd`.
 
 ## Product Implications
 
