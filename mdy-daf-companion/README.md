@@ -38,7 +38,7 @@ npm run package:companion:win
 npm run check
 cd ..
 claude plugin validate .
-claude plugin marketplace add . --scope local
+claude plugin marketplace add ./ --scope local
 claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
 ```
 
@@ -48,6 +48,8 @@ On macOS or Linux, replace the packaging command:
 npm run package:companion:mac
 npm run package:companion:linux
 ```
+
+On Windows, the package script closes stale packaged `mdy-daf-companion.exe` processes from `out\` before rebuilding. If Windows still reports `EPERM` while unlinking a DLL, close the companion window and pause OneDrive or antivirus scanning for the release folder, then rerun `npm run package:companion:win`.
 
 For one-session development without installing into a marketplace:
 

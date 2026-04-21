@@ -24,7 +24,7 @@ npm run package:companion:win
 npm run check
 cd ..
 claude plugin validate .
-claude plugin marketplace add . --scope local
+claude plugin marketplace add ./ --scope local
 claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
 ```
 

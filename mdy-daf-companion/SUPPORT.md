@@ -31,6 +31,10 @@ Use the matching package command for macOS or Linux on those platforms.
 
 ## Common Issues
 
+### Windows Packaging Reports EPERM
+
+Rerun `npm run package:companion:win` after closing the companion window. The package script tries to stop stale packaged companion processes automatically, but OneDrive or antivirus software can still briefly lock Electron DLLs in `out\mdy-daf-companion-win32-x64`.
+
 ### The Companion Does Not Open
 
 Run `mdy-daf doctor`. A release install should include a matching `out/mdy-daf-companion-<platform>-<arch>` folder. A development install needs `npm install` so the local Electron runtime exists.

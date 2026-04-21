@@ -43,11 +43,13 @@ npm run check
 cd ..
 ```
 
+On Windows, `npm run package:companion:win` runs a preflight cleanup before Electron Packager starts. It closes stale packaged companion processes from `out\` and removes the old output folder. If Windows still reports `EPERM` while unlinking a DLL, close MDY Daf Companion and pause OneDrive or antivirus scanning for the release folder, then rerun the command.
+
 From the repository root:
 
 ```bash
 claude plugin validate .
-claude plugin marketplace add . --scope local
+claude plugin marketplace add ./ --scope local
 claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
 ```
 

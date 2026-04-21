@@ -60,7 +60,7 @@ npm run package:companion:linux  # Linux x64
 # Install to local marketplace (after packaging)
 cd ..
 claude plugin validate .
-claude plugin marketplace add . --scope local
+claude plugin marketplace add ./ --scope local
 claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
 
 # Or run Claude Code with the plugin directory directly

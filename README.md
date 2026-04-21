@@ -48,13 +48,15 @@ cd ..
 
 For development, `npm install` is enough because the launcher can use the local Electron runtime. For a release zip or marketplace package, include the matching `out/mdy-daf-companion-<platform>-<arch>` folder so users do not need the dev Electron dependency.
 
+On Windows, the package script runs a preflight that closes stale packaged `mdy-daf-companion.exe` processes from `out\` and removes the old output folder before rebuilding. If Windows still reports `EPERM` on a DLL, close the companion window and pause OneDrive or antivirus scanning for the release folder, then rerun the same command.
+
 ### Option 1: Local Marketplace Install
 
 From this repository root:
 
 ```bash
 claude plugin validate .
-claude plugin marketplace add . --scope local
+claude plugin marketplace add ./ --scope local
 claude plugin install mdy-daf-companion@mdy-daf-companion --scope local
 ```
 
