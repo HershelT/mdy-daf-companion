@@ -42,4 +42,10 @@ jobs:
       - name: Publish to npm with trusted publishing
         if: ${{ inputs.publish == 'true' }}
         working-directory: mdy-daf-companion
-        run: npm run release:publish
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if npm view "mdy-daf-companion@$VERSION" version >/dev/null 2>&1; then
+            echo "mdy-daf-companion@$VERSION is already published; skipping npm publish."
+            exit 0
+          fi
+          npm run release:publish
