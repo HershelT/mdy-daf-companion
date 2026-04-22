@@ -13,7 +13,7 @@ Perform a comprehensive security and cleanup audit for a production-quality Clau
 Current release context:
 - Public npm package: `mdy-daf-companion`.
 - Repository: `https://github.com/HershelT/mdy-daf-companion`.
-- Current intended version: `0.1.3`.
+- Current intended version: `0.1.4`.
 - Public install path: `claude plugin marketplace add HershelT/mdy-daf-companion`, then `claude plugin install mdy-daf-companion@mdy-daf-companion`.
 - Publishing uses npm trusted publishing from `.github/workflows/release.yml`; do not restore long-lived `NPM_TOKEN` publishing unless trusted publishing is unavailable and the fallback is explicitly temporary.
 - Electron-only companion is the user-facing playback and dashboard surface.

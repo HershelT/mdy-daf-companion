@@ -151,7 +151,7 @@ test("getCompanionCommand finds Electron in Claude marketplace npm cache", () =>
     "cache",
     "mdy-daf-companion",
     "mdy-daf-companion",
-    "0.1.3"
+    "0.1.4"
   );
   const electronCli = path.join(pluginsRoot, "npm-cache", "node_modules", "electron", "cli.js");
   const mainPath = path.join(pluginRoot, "desktop", "electron", "main.cjs");

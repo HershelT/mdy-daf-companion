@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.4 - 2026-04-22
 
 - Fixed marketplace-installed companion launch by resolving Electron from Claude's shared npm plugin cache.
 - Added regression coverage for the Claude marketplace cache layout.
 - Documented a cache refresh workaround for installs that remain pinned to an older npm package after marketplace update.
+- Bumped package, plugin, marketplace, and companion shell metadata to `0.1.4`.
 
 ## 0.1.3 - 2026-04-22
 
