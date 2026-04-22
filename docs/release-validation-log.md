@@ -89,6 +89,8 @@ Fix:
 - Moved `electron` to runtime `dependencies`.
 - Simplified the GitHub release workflow so npm publish does not download platform artifacts.
 - Added `npm run verify:npm-package` to block future accidental `out/` inclusion or oversized tarballs.
+- Tightened current-Daf verification so the parsed resolved title must match Hebcal, not only the stored daf metadata.
+- Pinned release workflow timezone to `America/Chicago` so CI does not roll into the next Daf Yomi date before the target local release day.
 
 ## Real Claude Code CLI Smoke
 

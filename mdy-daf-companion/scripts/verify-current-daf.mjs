@@ -51,6 +51,7 @@ const { civilDateInTimezone } = await distImport("core/time.js");
 const { HebcalDafCalendar } = await distImport("resolver/dafCalendar.js");
 const { resolveCurrentShiur, startDaemonProcess } = await distImport("daemon/client.js");
 const { readDaemonState } = await distImport("daemon/state.js");
+const { parseVideoTitle } = await distImport("resolver/titleParser.js");
 
 const paths = resolveRuntimePaths(process.env);
 
@@ -73,6 +74,14 @@ try {
   if (currentShiur.masechta !== expected.masechta || currentShiur.daf !== expected.daf) {
     throw new Error(
       `Resolved ${currentShiur.masechta} ${currentShiur.daf}, expected ${expected.masechta} ${expected.daf} for ${date}`
+    );
+  }
+  const parsedTitle = parseVideoTitle(currentShiur.title);
+  if (parsedTitle.masechta !== expected.masechta || parsedTitle.daf !== expected.daf) {
+    throw new Error(
+      `Resolved title "${currentShiur.title}" parsed as ${parsedTitle.masechta || "unknown"} ${
+        parsedTitle.daf || "unknown"
+      }, expected ${expected.masechta} ${expected.daf} for ${date}`
     );
   }
 

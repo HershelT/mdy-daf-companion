@@ -23,6 +23,9 @@ on:
 permissions:
   contents: read
 
+env:
+  TZ: America/Chicago
+
 jobs:
   verify-and-publish:
     name: Verify and publish

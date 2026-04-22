@@ -71,6 +71,41 @@ test("scores excluded event videos at zero confidence", () => {
   assert.equal(score.parsed.excludedReason, "siyum");
 });
 
+test("rejects adjacent daf titles instead of treating them as current", () => {
+  const score = scoreCandidate(
+    { ...menachos98, daf: 99 },
+    {
+      videoId: "previous",
+      title: "Daf Yomi Menachos Daf 98 by R' Eli Stefansky",
+      source: "youtube-channel-page",
+      durationSeconds: 3600
+    },
+    { language: "english", format: "full" }
+  );
+
+  assert.equal(score.confidence, 0);
+  assert.deepEqual(score.reasons, ["daf-mismatch"]);
+});
+
+test("throws when only the previous daf is available", () => {
+  assert.throws(
+    () =>
+      chooseBestCandidate(
+        { ...menachos98, daf: 99 },
+        [
+          {
+            videoId: "previous",
+            title: "Daf Yomi Menachos Daf 98 by R' Eli Stefansky",
+            source: "youtube-channel-page",
+            durationSeconds: 3600
+          }
+        ],
+        { language: "english", format: "full" }
+      ),
+    /No confident MDY shiur match/
+  );
+});
+
 test("chooses matching full English daf over newer Hebrew or chazarah videos", () => {
   const candidates: VideoCandidate[] = [
     {

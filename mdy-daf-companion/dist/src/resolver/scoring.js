@@ -12,6 +12,22 @@ export function scoreCandidate(daf, candidate, preferences) {
             reasons: [`excluded:${parsed.excludedReason}`]
         };
     }
+    if (parsed.masechta && !masechtaMatches(parsed.masechta, daf.masechta)) {
+        return {
+            video: candidate,
+            parsed,
+            confidence: 0,
+            reasons: ["masechta-mismatch"]
+        };
+    }
+    if (parsed.daf !== null && parsed.daf !== daf.daf) {
+        return {
+            video: candidate,
+            parsed,
+            confidence: 0,
+            reasons: ["daf-mismatch"]
+        };
+    }
     if (masechtaMatches(parsed.masechta, daf.masechta)) {
         score += 0.4;
         reasons.push("masechta");
