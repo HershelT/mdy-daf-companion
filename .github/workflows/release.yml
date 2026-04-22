@@ -11,6 +11,14 @@ on:
         options:
           - "false"
           - "true"
+      publish_auth:
+        description: npm publish authentication mode
+        required: true
+        default: "trusted-publishing"
+        type: choice
+        options:
+          - "trusted-publishing"
+          - "npm-token-bootstrap"
 
 permissions:
   contents: read
@@ -64,7 +72,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          registry-url: https://registry.npmjs.org
           cache: npm
           cache-dependency-path: mdy-daf-companion/package-lock.json
       - name: Install dependencies
@@ -79,9 +86,15 @@ jobs:
       - name: Verify release package
         working-directory: mdy-daf-companion
         run: npm run release:prepare
-      - name: Publish to npm
-        if: ${{ inputs.publish == 'true' }}
+      - name: Publish to npm with trusted publishing
+        if: ${{ inputs.publish == 'true' && inputs.publish_auth == 'trusted-publishing' }}
+        working-directory: mdy-daf-companion
+        run: npm run release:publish
+      - name: Publish to npm with bootstrap token
+        if: ${{ inputs.publish == 'true' && inputs.publish_auth == 'npm-token-bootstrap' }}
         working-directory: mdy-daf-companion
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm run release:publish
+        run: |
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+          npm run release:publish

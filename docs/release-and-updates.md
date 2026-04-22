@@ -111,13 +111,25 @@ The root `.claude-plugin/marketplace.json` references the npm package source. Pu
 - The GitHub repository is reachable by Claude Code as `OWNER/REPO`.
 - `mdy-daf-companion@0.1.0` is published to npm.
 
-To publish through GitHub Actions:
+To bootstrap the first publish through GitHub Actions:
 
-1. Add `NPM_TOKEN` as a repository secret.
+1. Add a short-lived granular npm token as the repository secret `NPM_TOKEN`.
 2. Run `Release MDY Daf Companion`.
 3. Set `publish` to `true`.
-4. Confirm the workflow publishes `mdy-daf-companion@0.1.0`.
-5. Validate public install from a clean Claude Code session:
+4. Set `publish_auth` to `npm-token-bootstrap`.
+5. Confirm the workflow publishes `mdy-daf-companion@0.1.0`.
+
+After npm creates the package, configure trusted publishing on npm for:
+
+- Owner: `HershelT`
+- Repository: `mdy-daf-companion`
+- Workflow file: `release.yml`
+- Package directory: `mdy-daf-companion`
+- Environment: leave blank unless GitHub environments are added later
+
+For later releases, run `Release MDY Daf Companion` with `publish=true` and `publish_auth=trusted-publishing`. The trusted path uses GitHub OIDC with `id-token: write` and does not require `NPM_TOKEN`.
+
+Validate public install from a clean Claude Code session:
 
 ```bash
 claude plugin marketplace add OWNER/REPO
@@ -132,7 +144,7 @@ npm run release:prepare
 npm publish
 ```
 
-Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login` or use the GitHub workflow with `NPM_TOKEN`.
+Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login`. Manual publish is not recommended for the public package unless all Windows, Linux, and macOS companion bundles already exist in `out/`.
 
 ## Updating Efficiently
 

@@ -39,7 +39,7 @@ Last updated: April 21, 2026.
 - Packaged companion detection in `mdy-daf doctor`.
 - Release-surface tests that block browser opener/dashboard regressions.
 - Plugin `userConfig` schema.
-- npm package metadata, public files allowlist, executable `mdy-daf` bin wrapper, and GitHub release workflow.
+- npm package metadata, public files allowlist, executable `mdy-daf` bin wrapper, and GitHub release workflow with bootstrap-token and trusted-publishing modes.
 - Release/privacy docs.
 - Install/compatibility guide.
 - Smoke script.
@@ -57,7 +57,7 @@ Last updated: April 21, 2026.
 - Live resolver has successfully matched April 19, 2026 Menachos 98 to `2qz8rC9Yh_k`.
 - Windows packaged companion smoke test resolved April 20, 2026 Menachos 99 to `H9vgAHT7aKo`, opened `out/mdy-daf-companion-win32-x64/mdy-daf-companion.exe`, and captured a nonblank YouTube render.
 - Real Claude Code CLI smoke with Haiku loaded the plugin through `--plugin-dir`, exposed the slash commands, and showed `SessionStart`, `UserPromptSubmit`, and `Stop` hooks returning `prepare`, `resume`, and `pause_done`.
-- `npm publish --dry-run` passed locally; actual publish remains blocked until npm authentication or GitHub `NPM_TOKEN` is configured.
+- `npm publish --dry-run` passed locally; first publish requires bootstrap token or manual npm auth, and later publishes can use npm trusted publishing.
 - Commit log was scanned for `Co-authored-by` trailers and none were present.
 
 ## Remaining Real-World Validation

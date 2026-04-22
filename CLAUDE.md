@@ -208,7 +208,7 @@ For public release:
    npm run package:companion:linux
    ```
 4. The output folders in `out/` include bundled Electron binaries so users do not need `npm install` or the dev Electron dependency.
-5. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it builds platform bundles, runs `npm run release:prepare`, and can publish with `NPM_TOKEN`.
+5. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it builds platform bundles, runs `npm run release:prepare`, supports one-time bootstrap token publishing, and supports npm trusted publishing after npm package setup.
 6. After publication, users install from the GitHub marketplace with `claude plugin marketplace add OWNER/REPO` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
 
 Repackage Electron whenever `desktop/electron/**`, `src/player/**`, companion launcher behavior, Electron dependencies, or packaged runtime files change.

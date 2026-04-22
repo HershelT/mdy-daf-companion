@@ -166,18 +166,20 @@ git remote add origin https://github.com/OWNER/REPO.git
 git push -u origin main
 ```
 
-3. Add an npm automation token as the GitHub secret `NPM_TOKEN`.
+3. For the first publish only, add a short-lived npm granular token as the GitHub secret `NPM_TOKEN`.
 4. Open GitHub Actions and run `Release MDY Daf Companion`.
-5. Set the workflow input `publish` to `true` for the real release.
-6. Confirm npm published `mdy-daf-companion@0.1.0`.
-7. Users install with:
+5. Set `publish` to `true` and `publish_auth` to `npm-token-bootstrap` for the first publish.
+6. After npm creates the package, configure npm trusted publishing for this GitHub workflow.
+7. For later releases, run the same workflow with `publish_auth` set to `trusted-publishing`.
+8. Confirm npm published `mdy-daf-companion@0.1.0`.
+9. Users install with:
 
 ```bash
 claude plugin marketplace add OWNER/REPO
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
-The workflow builds Electron bundles on Windows, Linux, and macOS, downloads them into `mdy-daf-companion/out`, runs release verification, and publishes the self-contained npm package.
+The workflow builds Electron bundles on Windows, Linux, and macOS, downloads them into `mdy-daf-companion/out`, runs release verification, and publishes the self-contained npm package. Release verification is CI-safe: when the `claude` CLI is unavailable on GitHub runners, `npm run validate:plugin` falls back to manifest and file checks.
 
 Manual publish is possible only from a machine or CI workspace that already has all platform bundles in `mdy-daf-companion/out`:
 

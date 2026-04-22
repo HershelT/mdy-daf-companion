@@ -206,9 +206,11 @@ The public release is an npm package referenced by a GitHub-hosted Claude Code m
 Publish through GitHub Actions:
 
 1. Push the repository to GitHub.
-2. Add `NPM_TOKEN` as a repository secret.
+2. For the first publish only, add a short-lived npm granular token as `NPM_TOKEN`.
 3. Run `Release MDY Daf Companion`.
-4. Set workflow input `publish` to `true`.
+4. Set `publish` to `true` and `publish_auth` to `npm-token-bootstrap`.
+5. After npm creates the package, configure npm trusted publishing for this workflow.
+6. For later releases, run with `publish_auth` set to `trusted-publishing`.
 
 Manual publish from a workspace that already contains all platform bundles:
 

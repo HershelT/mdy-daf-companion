@@ -247,33 +247,37 @@ test("daemon stores current video and renders resume position in player", async 
 
 test("daemon serves dashboard data for the Electron companion", async () => {
   const paths = tempPaths();
+  const database = new AppDatabase(paths);
+  database.migrate();
+  database.setSetting("currentShiurVideoId", "video-1");
+  database.upsertVideo({
+    id: "video-1",
+    videoId: "video-1",
+    source: "test",
+    sourceUrl: "https://www.youtube.com/watch?v=video-1",
+    title: "Daf Yomi Menachos Daf 98",
+    language: "english",
+    format: "full",
+    masechta: "Menachos",
+    daf: 98,
+    durationSeconds: 100,
+    publishedAt: null,
+    confidence: 1,
+    rawMetadataJson: null
+  });
+  const dashboardDate = civilDateInTimezone(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+  );
+  database.incrementDailyStats(dashboardDate, {
+    watchedSeconds: 900,
+    codingSeconds: 1800,
+    dafimCompleted: 1
+  });
+  database.close();
+
   const daemon = await startDaemonServer(paths);
   try {
-    const database = new AppDatabase(paths);
-    database.migrate();
-    database.setSetting("currentShiurVideoId", "video-1");
-    database.upsertVideo({
-      id: "video-1",
-      videoId: "video-1",
-      source: "test",
-      sourceUrl: "https://www.youtube.com/watch?v=video-1",
-      title: "Daf Yomi Menachos Daf 98",
-      language: "english",
-      format: "full",
-      masechta: "Menachos",
-      daf: 98,
-      durationSeconds: 100,
-      publishedAt: null,
-      confidence: 1,
-      rawMetadataJson: null
-    });
-    database.incrementDailyStats(civilDateInTimezone(new Date(), "UTC"), {
-      watchedSeconds: 900,
-      codingSeconds: 1800,
-      dafimCompleted: 1
-    });
-    database.close();
-
     const response = await fetch(`http://127.0.0.1:${daemon.port}/api/dashboard`, {
       headers: { authorization: `Bearer ${daemon.token}` }
     });

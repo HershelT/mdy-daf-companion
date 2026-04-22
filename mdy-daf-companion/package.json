@@ -7,6 +7,15 @@
   "productName": "MDY Daf Companion",
   "description": "Claude Code plugin that opens the latest MDY Daf Yomi shiur in a floating Electron companion.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HershelT/mdy-daf-companion.git",
+    "directory": "mdy-daf-companion"
+  },
+  "bugs": {
+    "url": "https://github.com/HershelT/mdy-daf-companion/issues"
+  },
+  "homepage": "https://github.com/HershelT/mdy-daf-companion#readme",
   "bin": {
     "mdy-daf": "bin/mdy-daf.mjs"
   },
@@ -45,12 +54,12 @@
     "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "verify:current-daf": "npm run build && node scripts/verify-current-daf.mjs",
-    "validate:plugin": "claude plugin validate .",
+    "validate:plugin": "node scripts/validate-plugin.mjs",
     "check": "npm run test && npm run validate:plugin && npm run smoke",
     "release:verify-packages": "node scripts/verify-companion-package.mjs --platform=win32,linux --arch=x64 && node scripts/verify-companion-package.mjs --platform=darwin --arch=arm64,x64",
     "release:prepare": "npm run check && npm run verify:current-daf && npm run release:verify-packages && npm pack --dry-run",
     "release:prepare:win": "npm run package:companion:win && npm run check && npm run verify:current-daf && npm pack --dry-run",
-    "release:publish": "npm publish"
+    "release:publish": "npm publish --access public"
   },
   "devDependencies": {
     "@electron/packager": "^19.1.0",

@@ -73,7 +73,7 @@ Result:
 - `npm run verify:current-daf` passed.
 - `npm pack --dry-run` and `npm publish --dry-run` included the plugin files, compiled runtime, docs, and packaged Windows/Linux companion folders currently present in `out/`.
 - `npm run release:verify-packages` verified Windows/Linux and correctly failed locally for missing macOS bundles; the all-platform release check must run in GitHub Actions or on a workspace that has generated `darwin-arm64` and `darwin-x64`.
-- Actual `npm publish` was not run locally because npm authentication was not configured; use `npm login` or the GitHub workflow with `NPM_TOKEN`.
+- Actual `npm publish` was not run locally because npm authentication was not configured; use `npm login` for manual publish, or use the GitHub workflow bootstrap-token mode for the first publish and trusted-publishing mode after npm package setup.
 
 ## Real Claude Code CLI Smoke
 
