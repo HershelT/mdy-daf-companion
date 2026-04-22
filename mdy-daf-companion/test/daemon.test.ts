@@ -6,7 +6,7 @@ import test from "node:test";
 import type { RuntimePaths } from "../src/core/paths.js";
 import { sendDaemonAction, sendHookToDaemon } from "../src/daemon/client.js";
 import { startDaemonServer } from "../src/daemon/server.js";
-import { CURRENT_SHIUR_SETTING } from "../src/resolver/persist.js";
+import { CURRENT_SHIUR_DATE_SETTING, CURRENT_SHIUR_SETTING } from "../src/resolver/persist.js";
 import { AppDatabase } from "../src/storage/database.js";
 import { civilDateInTimezone } from "../src/core/time.js";
 
@@ -20,6 +20,17 @@ function tempPaths(): RuntimePaths {
     daemonStatePath: path.join(dataRoot, "daemon.json"),
     logPath: path.join(dataRoot, "mdy-daf.log")
   };
+}
+
+function shiftCivilDate(date: string, dayDelta: number): string {
+  const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error(`Invalid civil date: ${date}`);
+  }
+
+  const shifted = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  shifted.setUTCDate(shifted.getUTCDate() + dayDelta);
+  return shifted.toISOString().slice(0, 10);
 }
 
 async function waitForStatus(
@@ -109,6 +120,72 @@ test("play action auto resolves current shiur on a clean first run", async () =>
       (candidate) => candidate.currentShiur?.videoId === "auto-video"
     );
     assert.equal(status.currentShiur?.videoId, "auto-video");
+    assert.equal(resolveCalls, 1);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("play refreshes stale current shiur from a prior daf date", async () => {
+  const paths = tempPaths();
+  const database = new AppDatabase(paths);
+  database.migrate();
+  const today = civilDateInTimezone(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+  const yesterday = shiftCivilDate(today, -1);
+  database.upsertVideo({
+    id: "stale-video",
+    videoId: "stale-video",
+    source: "test",
+    sourceUrl: "https://www.youtube.com/watch?v=stale-video",
+    title: "Daf Yomi Menachos Daf 100",
+    language: "english",
+    format: "full",
+    masechta: "Menachos",
+    daf: 100,
+    durationSeconds: 1800,
+    publishedAt: null,
+    confidence: 1,
+    rawMetadataJson: null
+  });
+  database.setSetting(CURRENT_SHIUR_SETTING, "stale-video");
+  database.setSetting(CURRENT_SHIUR_DATE_SETTING, yesterday);
+  database.close();
+
+  let resolveCalls = 0;
+  const daemon = await startDaemonServer(paths, 0, {
+    resolveAndStoreShiur: async (date, db) => {
+      resolveCalls += 1;
+      assert.equal(date, today);
+      db.upsertVideo({
+        id: "fresh-video",
+        videoId: "fresh-video",
+        source: "test",
+        sourceUrl: "https://www.youtube.com/watch?v=fresh-video",
+        title: "Daf Yomi Menachos Daf 101",
+        language: "english",
+        format: "full",
+        masechta: "Menachos",
+        daf: 101,
+        durationSeconds: 1800,
+        publishedAt: null,
+        confidence: 1,
+        rawMetadataJson: null
+      });
+      db.setSetting(CURRENT_SHIUR_SETTING, "fresh-video");
+      db.setSetting(CURRENT_SHIUR_DATE_SETTING, date);
+      return "fresh-video";
+    }
+  });
+  try {
+    const result = await sendDaemonAction(paths, "play");
+    assert.equal(result.playbackState, "playing");
+
+    const status = await waitForStatus(
+      daemon.port,
+      daemon.token,
+      (candidate) => candidate.currentShiur?.videoId === "fresh-video"
+    );
+    assert.equal(status.currentShiur?.videoId, "fresh-video");
     assert.equal(resolveCalls, 1);
   } finally {
     await daemon.close();

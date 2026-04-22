@@ -6,6 +6,13 @@ description: Resolve or explain which MDY Daf Yomi shiur should be played for a 
 
 Use this skill when the user asks which Rabbi Eli Stefansky or MDY Daf Yomi shiur should play.
 
+Command guide:
+
+- Use `mdy-daf today` to report today's daf date and number.
+- Use `mdy-daf resolve --date YYYY-MM-DD` to resolve the best matching shiur.
+- If `mdy-daf` is not on PATH, run `node "${CLAUDE_PLUGIN_ROOT}/dist/src/cli.js" today` or `node "${CLAUDE_PLUGIN_ROOT}/dist/src/cli.js" resolve --date YYYY-MM-DD`.
+- Do not run `resolve-daf-shiur` as a CLI subcommand. That name is the skill, not the CLI command.
+
 Resolution order:
 
 1. Determine the target date, timezone, masechta, and daf.

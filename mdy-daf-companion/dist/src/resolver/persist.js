@@ -1,4 +1,5 @@
 export const CURRENT_SHIUR_SETTING = "currentShiurVideoId";
+export const CURRENT_SHIUR_DATE_SETTING = "currentShiurResolvedDafDate";
 export function storeResolvedShiur(database, resolved) {
     database.upsertVideo({
         id: resolved.video.videoId,
@@ -16,4 +17,5 @@ export function storeResolvedShiur(database, resolved) {
         rawMetadataJson: JSON.stringify(resolved)
     });
     database.setSetting(CURRENT_SHIUR_SETTING, resolved.video.videoId);
+    database.setSetting(CURRENT_SHIUR_DATE_SETTING, resolved.daf.date);
 }

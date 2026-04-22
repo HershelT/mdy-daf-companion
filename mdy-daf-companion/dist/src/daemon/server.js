@@ -11,9 +11,10 @@ import { openCompanionPlayer } from "../player/companionLauncher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
 import { createDefaultCandidateProvider } from "../resolver/defaultProvider.js";
 import { resolveBestAvailableShiurForDate } from "../resolver/index.js";
-import { storeResolvedShiur, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
+import { storeResolvedShiur, CURRENT_SHIUR_DATE_SETTING, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
 import { shouldBlockAutoPlayback } from "../guard/shabbosGuard.js";
 import { summarizeDailyStats } from "../stats/summary.js";
+const AUTO_RESOLVE_RETRY_MS = 30 * 60 * 1000;
 async function readBody(request) {
     let body = "";
     request.setEncoding("utf8");
@@ -42,20 +43,25 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
         playbackState: "idle",
         lastAction: null,
         currentVideoId: null,
+        currentShiurDate: null,
         activeCodingStartedAt: null,
+        lastAutoResolveAttemptAt: null,
         lastProgressByVideo: new Map(),
         completedVideos: new Set()
     };
     const database = new AppDatabase(paths);
     database.migrate();
     memory.currentVideoId = database.getSetting(CURRENT_SHIUR_SETTING) || null;
+    memory.currentShiurDate = database.getSetting(CURRENT_SHIUR_DATE_SETTING) || null;
     const config = loadConfig(paths);
-    const today = () => civilDateInTimezone(new Date(), config.timezone);
+    const today = () => civilDateInTimezone(new Date(), config.israelDateMode ? "Asia/Jerusalem" : config.timezone);
     let pendingCurrentShiurResolve = null;
     async function resolveAndStoreShiur(date = today()) {
         if (options.resolveAndStoreShiur) {
             const videoId = await options.resolveAndStoreShiur(date, database);
             memory.currentVideoId = videoId;
+            memory.currentShiurDate = date;
+            database.setSetting(CURRENT_SHIUR_DATE_SETTING, date);
             return videoId;
         }
         const resolved = await resolveBestAvailableShiurForDate({
@@ -69,13 +75,33 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
         });
         storeResolvedShiur(database, resolved);
         memory.currentVideoId = resolved.video.videoId;
+        memory.currentShiurDate = resolved.daf.date;
         return resolved.video.videoId;
     }
-    function scheduleCurrentShiurResolve() {
-        if (!config.autoResolveShiur || currentShiurStatus() || pendingCurrentShiurResolve) {
+    function needsCurrentShiurRefresh(targetDate) {
+        if (!currentShiurStatus()) {
+            return true;
+        }
+        if (!memory.currentShiurDate) {
+            return true;
+        }
+        return memory.currentShiurDate !== targetDate;
+    }
+    function scheduleCurrentShiurResolve(force = false) {
+        if (!config.autoResolveShiur || pendingCurrentShiurResolve) {
             return;
         }
-        pendingCurrentShiurResolve = resolveAndStoreShiur()
+        const targetDate = today();
+        if (!force && !needsCurrentShiurRefresh(targetDate)) {
+            return;
+        }
+        if (!force &&
+            memory.lastAutoResolveAttemptAt &&
+            Date.now() - memory.lastAutoResolveAttemptAt < AUTO_RESOLVE_RETRY_MS) {
+            return;
+        }
+        memory.lastAutoResolveAttemptAt = Date.now();
+        pendingCurrentShiurResolve = resolveAndStoreShiur(targetDate)
             .catch(() => "")
             .finally(() => {
             pendingCurrentShiurResolve = null;
@@ -223,7 +249,7 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
                     }
                     else {
                         markCodingActive();
-                        scheduleCurrentShiurResolve();
+                        scheduleCurrentShiurResolve(true);
                     }
                 }
                 else if (record.actionTaken === "close") {
@@ -254,6 +280,8 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
                     return;
                 }
                 memory.currentVideoId = body.videoId;
+                memory.currentShiurDate = null;
+                database.setSetting(CURRENT_SHIUR_DATE_SETTING, null);
                 sendJson(response, 200, { ok: true, videoId: memory.currentVideoId });
                 return;
             }

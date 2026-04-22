@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.5 - 2026-04-22
+
+- Fixed stale day-rollover behavior by persisting resolved daf date and auto-refreshing current shiur when the stored daf date is no longer current.
+- Added retry throttling for background auto-resolve attempts to keep hooks and daemon actions responsive.
+- Aligned daemon date resolution with `israelDateMode` so current-day logic consistently follows configured date mode.
+- Reduced cache lifetime for near-current daf candidate queries (today/yesterday) so newly uploaded shiur metadata is picked up faster.
+- Added daemon regression coverage for refreshing stale persisted shiur state from a prior daf date.
+- Clarified command/skill guidance so `resolve-daf-shiur` is treated as a skill name while CLI uses `mdy-daf resolve`.
+- Clarified `/prepare` command behavior to execute immediately without pre-run follow-up prompts.
+- Bumped package, plugin, marketplace, and companion shell metadata to `0.1.5`.
+
 ## 0.1.4 - 2026-04-22
 
 - Fixed marketplace-installed companion launch by resolving Electron from Claude's shared npm plugin cache.
