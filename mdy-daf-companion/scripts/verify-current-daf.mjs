@@ -31,6 +31,17 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function shiftCivilDate(date, dayDelta) {
+  const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error(`Invalid civil date: ${date}`);
+  }
+
+  const shifted = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  shifted.setUTCDate(shifted.getUTCDate() + dayDelta);
+  return shifted.toISOString().slice(0, 10);
+}
+
 async function removeDirectoryWithRetries(target) {
   for (let attempt = 1; attempt <= 8; attempt += 1) {
     try {
@@ -49,6 +60,7 @@ const { resolveRuntimePaths } = await distImport("core/paths.js");
 const { loadConfig } = await distImport("core/config.js");
 const { civilDateInTimezone } = await distImport("core/time.js");
 const { HebcalDafCalendar } = await distImport("resolver/dafCalendar.js");
+const { DEFAULT_DATE_LOOKBACK_DAYS } = await distImport("resolver/index.js");
 const { resolveCurrentShiur, startDaemonProcess } = await distImport("daemon/client.js");
 const { readDaemonState } = await distImport("daemon/state.js");
 const { parseVideoTitle } = await distImport("resolver/titleParser.js");
@@ -62,7 +74,16 @@ try {
 
   const config = loadConfig(paths);
   const date = civilDateInTimezone(new Date(), config.timezone);
-  const expected = await new HebcalDafCalendar().getDafForDate(date);
+  const calendar = new HebcalDafCalendar();
+  const expected = await calendar.getDafForDate(date);
+  const allowedTargets = [{ label: "today", date, daf: expected }];
+
+  // Operational policy: allow one-day date-level fallback for post-midnight upload lag.
+  for (let offset = 1; offset <= DEFAULT_DATE_LOOKBACK_DAYS; offset += 1) {
+    const fallbackDate = shiftCivilDate(date, -offset);
+    const fallback = await calendar.getDafForDate(fallbackDate);
+    allowedTargets.push({ label: `fallback:-${offset}`, date: fallbackDate, daf: fallback });
+  }
 
   await startDaemonProcess(paths);
   const resolved = await resolveCurrentShiur(paths);
@@ -71,17 +92,23 @@ try {
   if (!currentShiur) {
     throw new Error("Current shiur was not resolved on clean first run");
   }
-  if (currentShiur.masechta !== expected.masechta || currentShiur.daf !== expected.daf) {
+
+  const matchedTarget = allowedTargets.find(
+    ({ daf }) => currentShiur.masechta === daf.masechta && currentShiur.daf === daf.daf
+  );
+  if (!matchedTarget) {
+    const accepted = allowedTargets.map(({ date, daf }) => `${daf.masechta} ${daf.daf} for ${date}`).join(" or ");
     throw new Error(
-      `Resolved ${currentShiur.masechta} ${currentShiur.daf}, expected ${expected.masechta} ${expected.daf} for ${date}`
+      `Resolved ${currentShiur.masechta} ${currentShiur.daf}, expected ${accepted}`
     );
   }
+
   const parsedTitle = parseVideoTitle(currentShiur.title);
-  if (parsedTitle.masechta !== expected.masechta || parsedTitle.daf !== expected.daf) {
+  if (parsedTitle.masechta !== matchedTarget.daf.masechta || parsedTitle.daf !== matchedTarget.daf.daf) {
     throw new Error(
       `Resolved title "${currentShiur.title}" parsed as ${parsedTitle.masechta || "unknown"} ${
         parsedTitle.daf || "unknown"
-      }, expected ${expected.masechta} ${expected.daf} for ${date}`
+      }, expected ${matchedTarget.daf.masechta} ${matchedTarget.daf.daf} for ${matchedTarget.date}`
     );
   }
 
@@ -92,7 +119,8 @@ try {
         cleanFirstRun: true,
         timezone: config.timezone,
         date,
-        expectedDaf: `${expected.masechta} ${expected.daf}`,
+        matchedPolicyTarget: matchedTarget.label,
+        expectedDaf: `${matchedTarget.daf.masechta} ${matchedTarget.daf.daf}`,
         resolvedTitle: currentShiur.title,
         videoId: currentShiur.videoId,
         sourceUrl: currentShiur.sourceUrl
