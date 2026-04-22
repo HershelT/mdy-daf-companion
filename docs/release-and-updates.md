@@ -1,6 +1,6 @@
 # Release And Updates
 
-Last updated: April 21, 2026.
+Last updated: April 22, 2026.
 
 This project is designed to ship as a Claude Code marketplace plus an npm package:
 
@@ -12,10 +12,10 @@ Claude Code marketplace entries support npm plugin sources, and installed market
 
 ## Public Install
 
-After the npm package is published and this repository is pushed to GitHub, users install with:
+Users install with:
 
 ```bash
-claude plugin marketplace add OWNER/REPO
+claude plugin marketplace add HershelT/mdy-daf-companion
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
@@ -96,13 +96,13 @@ npm view mdy-daf-companion version
 Create and push the GitHub marketplace repository:
 
 ```bash
-git remote add origin https://github.com/OWNER/REPO.git
+git remote add origin https://github.com/HershelT/mdy-daf-companion.git
 git push -u origin main
 ```
 
 The root `.claude-plugin/marketplace.json` references the npm package source. Public install will not work until both pieces exist:
 
-- The GitHub repository is reachable by Claude Code as `OWNER/REPO`.
+- The GitHub repository is reachable by Claude Code as `HershelT/mdy-daf-companion`.
 - `mdy-daf-companion@0.1.0` is published to npm.
 
 To bootstrap the first publish through GitHub Actions:
@@ -126,7 +126,7 @@ For later releases, run `Release MDY Daf Companion` with `publish=true` and `pub
 Validate public install from a clean Claude Code session:
 
 ```bash
-claude plugin marketplace add OWNER/REPO
+claude plugin marketplace add HershelT/mdy-daf-companion
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 

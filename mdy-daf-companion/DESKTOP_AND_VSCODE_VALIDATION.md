@@ -31,7 +31,7 @@ Use `npm run package:companion:mac` on macOS and `npm run package:companion:linu
 For public-release validation after npm publication, install from the GitHub marketplace:
 
 ```bash
-claude plugin marketplace add OWNER/REPO
+claude plugin marketplace add HershelT/mdy-daf-companion
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
@@ -59,7 +59,7 @@ Validation steps:
 2. Start a `Local` session for this repository folder or another local workspace.
 3. Click the `+` button next to the prompt box.
 4. Select `Plugins`.
-5. Add the public marketplace `OWNER/REPO`, or use a local plugin path if validating before publication.
+5. Add the public marketplace `HershelT/mdy-daf-companion`, or use a local plugin path if validating local changes.
 6. Confirm `mdy-daf-companion` appears in installed plugins and is enabled.
 7. If Desktop cannot see Node.js, open the local environment editor from the environment dropdown, hover `Local`, click the gear icon, and make sure Node is on `PATH`.
 8. Run:
@@ -98,7 +98,7 @@ Validation steps:
 1. Open this repository in VS Code.
 2. Open the Claude Code extension panel.
 3. Type `/plugins` in the Claude prompt box.
-4. On the `Marketplaces` tab, add the public marketplace `OWNER/REPO`, or add the local marketplace/path while validating before publication.
+4. On the `Marketplaces` tab, add the public marketplace `HershelT/mdy-daf-companion`, or add the local marketplace/path while validating local changes.
 5. On the `Plugins` tab, install or enable `mdy-daf-companion`.
 6. Restart/reload Claude Code if the extension shows a restart banner.
 7. Run:

@@ -2,7 +2,7 @@
 
 Last updated: April 21, 2026.
 
-This log records the concrete validation performed for the local beta release candidate. It is intentionally separate from the roadmap so future release agents can see what was actually run.
+This log records concrete release validation for the public 0.1.x package line. It is intentionally separate from the roadmap so future release agents can see what was actually run.
 
 ## Local Build And Test
 

@@ -57,12 +57,12 @@ npm run package:companion:mac    # macOS arm64 + x64
 npm run package:companion:linux  # Linux x64
 npm run verify:current-daf       # Clean first-run current-daf verification
 
-# Run Claude Code with the plugin directory directly before public release
+# Run Claude Code with the plugin directory directly for local development
 cd ..
 claude --plugin-dir ./mdy-daf-companion
 
 # After npm publication and GitHub marketplace push
-claude plugin marketplace add OWNER/REPO
+claude plugin marketplace add HershelT/mdy-daf-companion
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
@@ -204,7 +204,7 @@ For public release:
 3. Verify the public npm package surface: `npm run verify:npm-package`
 4. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it runs `npm run release:prepare`, supports one-time bootstrap token publishing, and supports npm trusted publishing after npm package setup.
 5. The public npm tarball must not include generated `out/` Electron app bundles. Electron is declared as a runtime dependency and launched through `node_modules/electron/cli.js`.
-6. After publication, users install from the GitHub marketplace with `claude plugin marketplace add OWNER/REPO` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
+6. Users install from the GitHub marketplace with `claude plugin marketplace add HershelT/mdy-daf-companion` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
 
 Use `package:companion:*` when validating optional native bundles, future signed app distribution, or platform-specific Electron shell behavior.
 

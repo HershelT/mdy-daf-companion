@@ -1,6 +1,6 @@
 # Install And Compatibility
 
-Last updated: April 21, 2026.
+Last updated: April 22, 2026.
 
 This guide covers installing MDY Daf Companion, validating first-run behavior, and checking Claude Code CLI, Claude Desktop, and VS Code extension compatibility.
 
@@ -33,14 +33,14 @@ Remote/cloud Claude sessions are not supported for local playback. SSH/dev-conta
 
 ## Public Install
 
-After the npm package is published and this marketplace repository is pushed to GitHub:
+Install from the published marketplace:
 
 ```bash
-claude plugin marketplace add OWNER/REPO
+claude plugin marketplace add HershelT/mdy-daf-companion
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
-Replace `OWNER/REPO` with the GitHub repository that contains `.claude-plugin/marketplace.json`.
+The marketplace repository is `HershelT/mdy-daf-companion`, and the npm package is `mdy-daf-companion`.
 
 No setup command is required. The default install auto-resolves today's Daf Yomi and opens the Electron companion on the first local Claude Code prompt. `/mdy-daf-companion:setup` is optional preference tuning.
 
@@ -131,7 +131,7 @@ Validation checklist:
 1. Open Claude Desktop.
 2. Start a local session for this repository folder or another local workspace.
 3. Open the plugin browser from the prompt UI.
-4. Add the public marketplace `OWNER/REPO`, or use the local development plugin path while testing before publication.
+4. Add the public marketplace `HershelT/mdy-daf-companion`, or use the local development plugin path while testing local changes.
 5. Install or enable `mdy-daf-companion`.
 6. Confirm Node.js is visible to the Desktop environment.
 7. Run `/mdy-daf-companion:status`.
@@ -154,7 +154,7 @@ Validation checklist:
 1. Open the workspace in VS Code.
 2. Open the Claude Code extension panel.
 3. Type `/plugins` in the Claude prompt box.
-4. Add the public marketplace `OWNER/REPO`, or use the local plugin path while testing before publication.
+4. Add the public marketplace `HershelT/mdy-daf-companion`, or use the local plugin path while testing local changes.
 5. Install or enable `mdy-daf-companion`.
 6. Restart/reload Claude Code if the extension shows a restart banner.
 7. Run `/mdy-daf-companion:status`.

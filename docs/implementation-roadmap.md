@@ -97,4 +97,4 @@ Exit status: beta-ready.
 - Pending: Legal/brand review.
 - Pending: Optional MDY partnership outreach.
 
-Exit status: local beta release candidate.
+Exit status: public 0.1.x release line is live; remaining work is product enhancement and broader real-world validation.

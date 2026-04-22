@@ -1,6 +1,6 @@
 # Security Policy
 
-Last updated: April 21, 2026.
+Last updated: April 22, 2026.
 
 MDY Daf Companion is a local-first Claude Code plugin. It starts a localhost daemon and a floating Electron companion so the latest MDY Daf Yomi shiur can play while Claude Code works.
 
@@ -8,7 +8,7 @@ MDY Daf Companion is a local-first Claude Code plugin. It starts a localhost dae
 
 | Version | Status |
 | --- | --- |
-| `0.1.x` | Local beta release candidate; security fixes accepted. |
+| `0.1.x` | Supported public release line; security fixes accepted. |
 
 ## Security Model
 
@@ -30,7 +30,7 @@ Any future telemetry, crash reporting, sync, leaderboard, or supporter feature m
 
 ## Reporting A Vulnerability
 
-For this local beta repository, report vulnerabilities privately to the repository owner or maintainer before public disclosure. Include:
+Report vulnerabilities privately to the repository owner or maintainer before public disclosure. Include:
 
 - A clear description of the issue.
 - Reproduction steps.
@@ -41,11 +41,11 @@ Do not include private prompts, source code, API keys, or shiur account credenti
 
 ## Release Security Checklist
 
-Before public release:
+Before each public release:
 
 - Run `npm run check`.
 - Run `npm run verify:current-daf`.
-- Run `npm publish --dry-run`.
+- Run `npm run verify:npm-package`.
 - Run `claude plugin validate .`.
 - Run `mdy-daf doctor`.
 - Verify `/player` and `/dashboard` standalone HTML routes remain removed.

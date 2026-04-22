@@ -69,7 +69,7 @@ Keep those files current when new facts change the product design.
 
 ## Release Criteria
 
-Before public release:
+Before each public release:
 
 - `claude plugin validate` passes.
 - Hook contract tests pass for all configured lifecycle events.
