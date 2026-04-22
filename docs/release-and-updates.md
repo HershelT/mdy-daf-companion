@@ -80,7 +80,7 @@ That command performs:
 - Smoke validation.
 - Live current-Daf verification.
 - npm package-surface verification through `npm pack --dry-run --json`.
-- A package-size and forbidden-file guard that fails if generated `out/` Electron bundles are accidentally included.
+- A package-size and forbidden-file guard that fails if generated `out/` Electron bundles, dependency folders, Playwright artifacts, smoke databases, logs, debug captures, local Claude settings, or source/test folders are accidentally included.
 
 ## Publishing
 

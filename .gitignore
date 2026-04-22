@@ -9,6 +9,10 @@ mdy-daf-companion/dist/test/
 *.sqlite
 *.sqlite-*
 *.log
+companion-last.png
+**/companion-last.png
+playwright-report/
+test-results/
 .DS_Store
 Thumbs.db
 .claude/settings.local.json

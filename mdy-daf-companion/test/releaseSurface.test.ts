@@ -43,7 +43,18 @@ test("Electron companion hardens logs, captures, and navigation surface", () => 
   assert.match(electron, /MDY_DAF_DEBUG_CAPTURE/);
   assert.match(electron, /isLocalCompanionUrl/);
   assert.match(electron, /setWindowOpenHandler/);
+  assert.match(electron, /isTrustedIpcEvent/);
+  assert.match(electron, /rejectUntrustedIpc/);
   assert.match(electron, /nodeIntegration:\s*false/);
   assert.match(electron, /contextIsolation:\s*true/);
   assert.match(electron, /sandbox:\s*true/);
+});
+
+test("Electron launcher does not place local bearer token in process arguments", () => {
+  const launcher = readProjectFile("src/player/companionLauncher.ts");
+
+  assert.doesNotMatch(launcher, /\[\.\.\.command\.args,\s*["']--url["']/);
+  assert.doesNotMatch(launcher, /\[\.\.\.command\.args,[^\]]*["']--data-root["']/s);
+  assert.match(launcher, /MDY_DAF_COMPANION_URL:\s*url/);
+  assert.match(launcher, /MDY_DAF_COMPANION_DATA:\s*paths\.dataRoot/);
 });

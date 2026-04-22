@@ -27,7 +27,7 @@ test("notification permission prompt pauses as waiting", () => {
   assert.equal(actionForHookEvent("Notification", "auth_success"), "record_only");
 });
 
-test("toHookEventRecord hashes payload and keeps session id", () => {
+test("toHookEventRecord fingerprints event category and keeps session id", () => {
   const record = toHookEventRecord(
     { hook_event_name: "Stop", session_id: "session-1" },
     "Fallback",
@@ -40,3 +40,29 @@ test("toHookEventRecord hashes payload and keeps session id", () => {
   assert.equal(record.payloadHash?.length, 64);
 });
 
+test("toHookEventRecord fingerprint excludes raw prompt and tool content", () => {
+  const first = toHookEventRecord(
+    {
+      hook_event_name: "UserPromptSubmit",
+      session_id: "session-1",
+      prompt: "private prompt text",
+      tool_input: { file_path: "C:/private/project/file.ts" }
+    },
+    "Fallback",
+    null,
+    "2026-04-19T00:00:00.000Z"
+  );
+  const second = toHookEventRecord(
+    {
+      hook_event_name: "UserPromptSubmit",
+      session_id: "session-1",
+      prompt: "different private prompt text",
+      tool_input: { file_path: "C:/other/private/file.ts" }
+    },
+    "Fallback",
+    null,
+    "2026-04-19T00:00:00.000Z"
+  );
+
+  assert.equal(first.payloadHash, second.payloadHash);
+});

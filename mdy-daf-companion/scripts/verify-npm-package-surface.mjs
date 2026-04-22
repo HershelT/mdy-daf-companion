@@ -47,15 +47,29 @@ const requiredFiles = [
   "README.md"
 ];
 const forbiddenPrefixes = [
+  "node_modules/",
   "out/",
   "dist/test/",
   "src/",
   "test/",
-  ".smoke-data/"
+  ".smoke-data/",
+  ".playwright-cli/",
+  "output/",
+  ".claude/"
+];
+const forbiddenFilePatterns = [
+  /(^|\/)companion-last\.png$/i,
+  /(^|\/).*\.sqlite(?:-.+)?$/i,
+  /(^|\/).*\.log$/i,
+  /(^|\/)settings\.local\.json$/i
 ];
 
 const missing = requiredFiles.filter((file) => !files.includes(file));
-const forbidden = files.filter((file) => forbiddenPrefixes.some((prefix) => file.startsWith(prefix)));
+const forbidden = files.filter(
+  (file) =>
+    forbiddenPrefixes.some((prefix) => file.startsWith(prefix)) ||
+    forbiddenFilePatterns.some((pattern) => pattern.test(file))
+);
 
 if (missing.length > 0) {
   console.error("npm package dry-run is missing required release files:");

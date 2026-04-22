@@ -66,6 +66,18 @@ export async function getCompanionPlayerUrl(paths: RuntimePaths): Promise<string
   return `http://${state.host}:${state.port}/companion?token=${encodeURIComponent(state.token)}`;
 }
 
+export function redactDaemonUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    if (url.searchParams.has("token")) {
+      url.searchParams.set("token", "[redacted]");
+    }
+    return url.toString().replace(/token=%5Bredacted%5D/gi, "token=[redacted]");
+  } catch {
+    return value.replace(/([?&]token=)[^&\s]+/gi, "$1[redacted]");
+  }
+}
+
 export async function sendHookToDaemon(
   paths: RuntimePaths,
   fallbackEvent: string,

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 import type { RuntimePaths } from "../src/core/paths.js";
-import { shouldRestartHealthyDaemon } from "../src/daemon/client.js";
+import { redactDaemonUrl, shouldRestartHealthyDaemon } from "../src/daemon/client.js";
 import type { DaemonStateFile } from "../src/daemon/state.js";
 
 const paths: RuntimePaths = {
@@ -59,4 +59,15 @@ test("plugin root comparison tolerates casing differences on Windows", () => {
 
   const restart = shouldRestartHealthyDaemon(state, paths, cliPath);
   assert.equal(restart, false);
+});
+
+test("redactDaemonUrl removes bearer token from companion URLs", () => {
+  assert.equal(
+    redactDaemonUrl("http://127.0.0.1:1234/companion?token=secret#stats"),
+    "http://127.0.0.1:1234/companion?token=[redacted]#stats"
+  );
+  assert.equal(
+    redactDaemonUrl("http://127.0.0.1:1234/companion?token=secret&view=stats"),
+    "http://127.0.0.1:1234/companion?token=[redacted]&view=stats"
+  );
 });

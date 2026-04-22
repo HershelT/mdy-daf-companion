@@ -60,6 +60,8 @@ Guard the product decisions that should not regress:
 - `/api/dashboard` remains available for the Electron companion.
 - Runtime source does not call `shell.openExternal` or other browser opener fallbacks.
 - Electron blocks external navigation instead of launching a browser.
+- Electron IPC handlers reject messages from untrusted senders.
+- Query-string bearer tokens only authorize the Electron `/companion` page load; daemon APIs require authorization headers.
 - Packaged companion lookup prefers `out/mdy-daf-companion-<platform>-<arch>` over the development Electron runtime.
 - Public npm package verification excludes generated `out/` bundles and fails on oversized tarballs.
 
@@ -103,6 +105,7 @@ Assert by default:
 - No prompt text is stored.
 - No transcript content is stored.
 - No source code or file contents are stored.
+- Hook event fingerprints do not include raw prompt, tool input, file path, or source text.
 - CWD is hashed or omitted.
 - Network calls are limited to configured source adapters.
 

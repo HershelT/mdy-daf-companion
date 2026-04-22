@@ -108,15 +108,6 @@ process.on("unhandledRejection", (error) => {
 
 log(`main-start argv=${JSON.stringify(redactArgv(process.argv))}`);
 
-function urlOrigin(value) {
-  try {
-    const origin = new URL(value).origin;
-    return origin === "null" ? null : origin;
-  } catch {
-    return null;
-  }
-}
-
 function isLocalCompanionUrl(value) {
   if (value === "about:blank") {
     return true;
@@ -141,6 +132,26 @@ function safeCompanionUrl(value) {
   }
   log(`blocked invalid companion url=${redactUrl(value)}`);
   return "about:blank";
+}
+
+function isTrustedMainFrameUrl(value) {
+  return isLocalCompanionUrl(value) || value === "about:blank";
+}
+
+function isTrustedIpcEvent(event) {
+  if (!mainWindow || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents) {
+    return false;
+  }
+  const frameUrl = event.senderFrame?.url || event.sender.getURL();
+  return isTrustedMainFrameUrl(frameUrl);
+}
+
+function rejectUntrustedIpc(event, channel) {
+  if (isTrustedIpcEvent(event)) {
+    return false;
+  }
+  log(`blocked ipc channel=${channel}`);
+  return true;
 }
 
 function readWindowState() {
@@ -260,17 +271,9 @@ function createWindow() {
   });
 
   mainWindow.webContents.on("will-navigate", (event, targetUrl) => {
-    const current = mainWindow.webContents.getURL();
-    const currentOrigin = current ? urlOrigin(current) : null;
-    const targetOrigin = targetUrl ? urlOrigin(targetUrl) : null;
-    if (!targetOrigin) {
+    if (!isLocalCompanionUrl(targetUrl)) {
       event.preventDefault();
-      log(`blocked invalid navigation url=${redactUrl(targetUrl)}`);
-      return;
-    }
-    if (currentOrigin && currentOrigin !== targetOrigin) {
-      event.preventDefault();
-      log(`blocked external navigation url=${redactUrl(targetUrl)}`);
+      log(`blocked navigation url=${redactUrl(targetUrl)}`);
     }
   });
 
@@ -327,15 +330,24 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.on("window:minimize", () => {
+ipcMain.on("window:minimize", (event) => {
+  if (rejectUntrustedIpc(event, "window:minimize")) {
+    return;
+  }
   mainWindow?.minimize();
 });
 
-ipcMain.on("window:close", () => {
+ipcMain.on("window:close", (event) => {
+  if (rejectUntrustedIpc(event, "window:close")) {
+    return;
+  }
   mainWindow?.close();
 });
 
-ipcMain.handle("window:toggleAlwaysOnTop", () => {
+ipcMain.handle("window:toggleAlwaysOnTop", (event) => {
+  if (rejectUntrustedIpc(event, "window:toggleAlwaysOnTop")) {
+    return false;
+  }
   if (!mainWindow || mainWindow.isDestroyed()) {
     return false;
   }
@@ -344,7 +356,10 @@ ipcMain.handle("window:toggleAlwaysOnTop", () => {
   return mainWindow.isAlwaysOnTop();
 });
 
-ipcMain.handle("window:state", () => {
+ipcMain.handle("window:state", (event) => {
+  if (rejectUntrustedIpc(event, "window:state")) {
+    return { alwaysOnTop: false };
+  }
   if (!mainWindow || mainWindow.isDestroyed()) {
     return { alwaysOnTop: false };
   }

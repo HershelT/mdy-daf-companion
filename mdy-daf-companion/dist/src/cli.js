@@ -2,7 +2,7 @@
 import { ingestHookEvent } from "./hooks/ingest.js";
 import { ingestHookEventViaDaemon } from "./hooks/ingest.js";
 import { resolveRuntimePaths } from "./core/paths.js";
-import { getCompanionPlayerUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
+import { getCompanionPlayerUrl, redactDaemonUrl, resolveCurrentShiur, sendDaemonAction, startDaemonProcess } from "./daemon/client.js";
 import { runDaemon } from "./daemon/server.js";
 import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { openCompanionPlayer } from "./player/companionLauncher.js";
@@ -97,7 +97,7 @@ async function main() {
         }
         case "companion-url": {
             await startDaemonProcess(resolveRuntimePaths());
-            process.stdout.write(`${await getCompanionPlayerUrl(resolveRuntimePaths())}\n`);
+            process.stdout.write(`${redactDaemonUrl(await getCompanionPlayerUrl(resolveRuntimePaths()))}\n`);
             return;
         }
         case "open-player": {
@@ -106,7 +106,7 @@ async function main() {
             const playback = await sendDaemonAction(paths, "play");
             const url = await getCompanionPlayerUrl(paths);
             const result = openCompanionPlayer(paths, url);
-            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, playbackState: playback.playbackState, ...result })}\n`);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url: redactDaemonUrl(url), playbackState: playback.playbackState, ...result })}\n`);
             return;
         }
         case "open-companion": {
@@ -115,7 +115,7 @@ async function main() {
             const playback = await sendDaemonAction(paths, "play");
             const url = await getCompanionPlayerUrl(paths);
             const result = openCompanionPlayer(paths, url);
-            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, playbackState: playback.playbackState, ...result })}\n`);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url: redactDaemonUrl(url), playbackState: playback.playbackState, ...result })}\n`);
             return;
         }
         case "open-dashboard": {
@@ -123,7 +123,7 @@ async function main() {
             await startDaemonProcess(paths);
             const url = `${await getCompanionPlayerUrl(paths)}#stats`;
             const result = openCompanionPlayer(paths, url);
-            process.stdout.write(`${JSON.stringify({ ok: result.opened, url, ...result })}\n`);
+            process.stdout.write(`${JSON.stringify({ ok: result.opened, url: redactDaemonUrl(url), ...result })}\n`);
             return;
         }
         case "stats": {

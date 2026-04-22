@@ -57,8 +57,8 @@ export function runDoctor(): DoctorReport {
     detail: companionCommand
       ? companionCommand.packaged
         ? `Packaged companion found at ${companionCommand.command}`
-        : `Development Electron runtime found at ${companionCommand.command}`
-      : "No packaged companion or development Electron runtime found"
+        : `Electron runtime found at ${companionCommand.runtimePath || companionCommand.command}`
+      : "No packaged companion or Electron runtime found"
   });
 
   try {

@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   companionUrl,
+  findClaudeNpmCacheElectronCli,
   getCompanionCommand,
   getPackagedCompanionExecutable,
   openCompanionPlayer
@@ -140,4 +141,42 @@ test("getCompanionCommand uses Electron cli.js for local installs", () => {
 
   assert.equal(command?.command, process.execPath);
   assert.deepEqual(command?.args, [electronCli, appPath, "--"]);
+  assert.equal(command?.runtimePath, electronCli);
+});
+
+test("getCompanionCommand finds Electron in Claude marketplace npm cache", () => {
+  const pluginsRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdy-claude-plugins-"));
+  const pluginRoot = path.join(
+    pluginsRoot,
+    "cache",
+    "mdy-daf-companion",
+    "mdy-daf-companion",
+    "0.1.3"
+  );
+  const electronCli = path.join(pluginsRoot, "npm-cache", "node_modules", "electron", "cli.js");
+  const mainPath = path.join(pluginRoot, "desktop", "electron", "main.cjs");
+  const appPath = path.dirname(mainPath);
+  fs.mkdirSync(path.dirname(electronCli), { recursive: true });
+  fs.mkdirSync(path.dirname(mainPath), { recursive: true });
+  fs.writeFileSync(electronCli, "", "utf8");
+  fs.writeFileSync(mainPath, "", "utf8");
+  fs.writeFileSync(path.join(appPath, "package.json"), "{}", "utf8");
+
+  const command = getCompanionCommand(
+    {
+      pluginRoot,
+      dataRoot: pluginRoot,
+      databasePath: path.join(pluginRoot, "state.sqlite"),
+      configPath: path.join(pluginRoot, "config.json"),
+      daemonStatePath: path.join(pluginRoot, "daemon.json"),
+      logPath: path.join(pluginRoot, "mdy.log")
+    },
+    process.platform,
+    {}
+  );
+
+  assert.equal(findClaudeNpmCacheElectronCli(pluginRoot, {}), electronCli);
+  assert.equal(command?.command, process.execPath);
+  assert.deepEqual(command?.args, [electronCli, appPath, "--"]);
+  assert.equal(command?.runtimePath, electronCli);
 });

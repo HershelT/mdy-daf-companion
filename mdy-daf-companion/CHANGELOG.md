@@ -1,9 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- Fixed marketplace-installed companion launch by resolving Electron from Claude's shared npm plugin cache.
+- Added regression coverage for the Claude marketplace cache layout.
+- Documented a cache refresh workaround for installs that remain pinned to an older npm package after marketplace update.
+
 ## 0.1.3 - 2026-04-22
 
 - Added resolver-level previous-date fallback (1-day lookback) when exact current-date shiur is not yet uploaded.
 - Kept strict exact daf/masechta scoring while shifting fallback logic to date orchestration.
+- Hardened daemon auth so query-string tokens only authorize the Electron `/companion` page load, while API routes require bearer headers.
+- Redacted companion URL tokens from CLI output and stopped passing the token through Electron process arguments.
+- Added Electron IPC sender validation and stricter `/companion`-only navigation checks.
+- Changed hook event fingerprints so raw prompt/tool payload changes are not reflected in the stored hash.
+- Expanded npm package verification to reject local logs, SQLite files, debug captures, Playwright output, local Claude settings, and dependency folders.
 - Hardened daemon startup to restart stale healthy daemons when runtime build metadata is newer or plugin roots do not match.
 - Hydrated daemon in-memory current shiur from persisted settings at startup.
 - Fixed companion player bootstrap so a shiur arriving after initial page load creates the YouTube player instead of remaining on "No shiur loaded yet".

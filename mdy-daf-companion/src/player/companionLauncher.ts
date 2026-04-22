@@ -8,6 +8,7 @@ export interface CompanionCommand {
   args: string[];
   shell?: boolean;
   packaged?: boolean;
+  runtimePath?: string;
 }
 
 export interface PlayerLaunchResult {
@@ -46,7 +47,38 @@ export function getCompanionCommand(
 
   const localCli = path.join(paths.pluginRoot, "node_modules", "electron", "cli.js");
   if (fs.existsSync(localCli)) {
-    return { command: process.execPath, args: [localCli, appPath, "--"] };
+    return { command: process.execPath, args: [localCli, appPath, "--"], runtimePath: localCli };
+  }
+
+  const cachedCli = findClaudeNpmCacheElectronCli(paths.pluginRoot, env);
+  if (cachedCli) {
+    return { command: process.execPath, args: [cachedCli, appPath, "--"], runtimePath: cachedCli };
+  }
+
+  return null;
+}
+
+export function findClaudeNpmCacheElectronCli(
+  pluginRoot: string,
+  env: NodeJS.ProcessEnv = process.env
+): string | null {
+  const roots = new Set<string>();
+  const configuredCache = env.CLAUDE_CODE_PLUGIN_CACHE_DIR;
+  if (configuredCache) {
+    roots.add(configuredCache);
+  }
+
+  const parts = path.resolve(pluginRoot).split(path.sep);
+  const cacheIndex = parts.lastIndexOf("cache");
+  if (cacheIndex > 0) {
+    roots.add(parts.slice(0, cacheIndex).join(path.sep));
+  }
+
+  for (const root of roots) {
+    const candidate = path.join(root, "npm-cache", "node_modules", "electron", "cli.js");
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
   }
 
   return null;
@@ -96,11 +128,12 @@ export function openCompanionPlayer(paths: RuntimePaths, playerUrl: string): Pla
     return {
       surface: "companion",
       opened: false,
-      reason: "Electron companion was not found. Run npm run package:companion for release builds, or npm install for local development."
+      reason:
+        "Electron companion was not found. Refresh the plugin install, run npm run package:companion for release builds, or run npm install for local development."
     };
   }
 
-  const child = spawn(command.command, [...command.args, "--url", url, "--data-root", paths.dataRoot], {
+  const child = spawn(command.command, command.args, {
     detached: true,
     stdio: "ignore",
     shell: command.shell || false,

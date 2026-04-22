@@ -252,6 +252,7 @@ MDY Menachos 99 18/61m watched | code 42m
 
 - Bind daemon to localhost only.
 - Use a random per-install token for local API calls.
+- Accept token query parameters only for the Electron `/companion` bootstrap route; all daemon API calls should use `Authorization: Bearer`.
 - Avoid broad filesystem reads.
 - Do not inspect project source files for stats.
 - Redact cwd or hash it for project-level analytics.

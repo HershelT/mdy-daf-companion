@@ -227,9 +227,25 @@ mdy-daf open-player
 If Electron does not open:
 
 1. Run `mdy-daf doctor`.
-2. For a release install, confirm the plugin installation includes `node_modules/electron`.
-3. For a development install, run `npm install` in `mdy-daf-companion`.
-4. Re-run `mdy-daf open-player`.
+2. For a release install, confirm `doctor` reports an Electron runtime. Marketplace installs may find it in Claude's shared npm cache, for example `~/.claude/plugins/npm-cache/node_modules/electron/cli.js`.
+3. If Claude keeps reinstalling an older npm package after a marketplace update, refresh the shared npm cache and reinstall the plugin:
+
+   ```bash
+   npm install --prefix ~/.claude/plugins/npm-cache mdy-daf-companion@latest
+   claude plugin uninstall mdy-daf-companion@mdy-daf-companion --keep-data
+   claude plugin install mdy-daf-companion@mdy-daf-companion
+   ```
+
+   On Windows PowerShell, use:
+
+   ```powershell
+   npm install --prefix "$env:USERPROFILE\.claude\plugins\npm-cache" mdy-daf-companion@latest
+   claude plugin uninstall mdy-daf-companion@mdy-daf-companion --keep-data
+   claude plugin install mdy-daf-companion@mdy-daf-companion
+   ```
+
+4. For a development install, run `npm install` in `mdy-daf-companion`.
+5. Re-run `mdy-daf open-player`.
 
 The product intentionally does not fall back to a regular browser video player.
 

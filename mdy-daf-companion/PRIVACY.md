@@ -43,7 +43,7 @@ The plugin does not send local watch/coding stats to this project, MDY, Anthropi
 
 ## Local Daemon
 
-The daemon binds to `127.0.0.1` and protects local API calls with a random bearer token stored in plugin data.
+The daemon binds to `127.0.0.1` and protects local API calls with a random bearer token stored in plugin data. The token is used in the Electron `/companion` URL for the initial local page load, but CLI output and companion logs redact it, and daemon API calls require the bearer token in the `Authorization` header.
 
 The Electron companion loads the daemon's local `/companion` route and embeds the official YouTube iframe. It blocks external navigation and popup attempts instead of opening a regular browser fallback.
 

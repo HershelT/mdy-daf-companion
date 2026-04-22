@@ -81,8 +81,7 @@ export function toHookEventRecord(
     matcher: typeof payload.matcher === "string" ? payload.matcher : notificationType || null,
     receivedAt,
     actionTaken: actionForHookEvent(eventName, notificationType),
-    payloadHash: stableHash(JSON.stringify(payload)),
+    payloadHash: stableHash(JSON.stringify({ eventName, notificationType: notificationType || null })),
     error: parseError
   };
 }
-

@@ -144,11 +144,34 @@ test("daemon does not serve removed HTML page routes", async () => {
     const unauthorized = await fetch(`http://127.0.0.1:${daemon.port}/player`);
     assert.equal(unauthorized.status, 401);
 
-    const response = await fetch(`http://127.0.0.1:${daemon.port}/player?token=${daemon.token}`);
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/player`, {
+      headers: { authorization: `Bearer ${daemon.token}` }
+    });
     assert.equal(response.status, 404);
 
-    const dashboard = await fetch(`http://127.0.0.1:${daemon.port}/dashboard?token=${daemon.token}`);
+    const dashboard = await fetch(`http://127.0.0.1:${daemon.port}/dashboard`, {
+      headers: { authorization: `Bearer ${daemon.token}` }
+    });
     assert.equal(dashboard.status, 404);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("daemon query token only authorizes Electron companion page load", async () => {
+  const paths = tempPaths();
+  const daemon = await startDaemonServer(paths);
+  try {
+    const companion = await fetch(`http://127.0.0.1:${daemon.port}/companion?token=${daemon.token}`);
+    assert.equal(companion.status, 200);
+
+    const status = await fetch(`http://127.0.0.1:${daemon.port}/status?token=${daemon.token}`);
+    assert.equal(status.status, 401);
+
+    const pause = await fetch(`http://127.0.0.1:${daemon.port}/pause?token=${daemon.token}`, {
+      method: "POST"
+    });
+    assert.equal(pause.status, 401);
   } finally {
     await daemon.close();
   }
