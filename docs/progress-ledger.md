@@ -38,6 +38,10 @@ Last updated: April 22, 2026.
 - Release verification scripts for current-Daf first-run behavior, optional packaged companion presence, and npm package surface.
 - Packaged companion detection in `mdy-daf doctor`.
 - Release-surface tests that block browser opener/dashboard regressions.
+- Date-level resolver fallback for post-midnight pre-upload gaps while preserving strict exact-daf scoring.
+- Stale detached-daemon restart guard based on runtime identity and build freshness.
+- Daemon startup hydration of in-memory current-shiur state from persisted settings.
+- Companion page bootstrap for late-arriving shiur video IDs after initial empty render.
 - Plugin `userConfig` schema.
 - npm package metadata, public files allowlist, executable `mdy-daf` bin wrapper, and GitHub release workflow using trusted publishing.
 - npm package guard that blocks generated Electron `out/` bundles from public publish.
@@ -62,6 +66,7 @@ Last updated: April 22, 2026.
 - GitHub Actions publish failure `24757445924` was diagnosed as oversized tarball publication, not token authentication; release workflow now publishes the lean runtime-dependency package.
 - Electron companion logs now redact URL tokens and API-key-like query parameters; debug renderer screenshots require `MDY_DAF_DEBUG_CAPTURE=1`.
 - Commit log was scanned for `Co-authored-by` trailers and none were present.
+- Targeted resolver/daemon/player regression suites pass for date fallback, stale-daemon replacement, Windows path-case handling, and persisted-current-shiur companion bootstrap.
 
 ## Remaining Real-World Validation
 

@@ -138,3 +138,22 @@ These require the target application or OS build host:
 - macOS packaged companion launch, signing, and notarization.
 - Linux packaged companion launch.
 - Windows code signing.
+
+## 0.1.3 Regression Hardening Validation
+
+Commands run:
+
+```bash
+cd mdy-daf-companion
+npm run build
+node --test "dist/test/resolver.test.js"
+node --test "dist/test/daemonClient.test.js"
+node --test "dist/test/daemon.test.js"
+```
+
+Result:
+
+- Resolver fallback regression tests pass for post-midnight date-advance before upload scenarios.
+- Daemon client restart-guard tests pass, including Windows path casing tolerance.
+- Daemon server tests pass for persisted current-shiur hydration and companion bootstrap behavior.
+- In plugin-dir smoke sessions, `/mdy-daf-companion:prepare` and `/mdy-daf-companion:status` remain consistent and companion playback can initialize after late status hydration.

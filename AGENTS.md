@@ -83,6 +83,7 @@ Regression checks to run before release:
 - `node --test "dist/test/daemonClient.test.js"`
 - `node --test "dist/test/daemon.test.js"`
 - Real session smoke via plugin-dir: run `/mdy-daf-companion:prepare`, `/mdy-daf-companion:status`, and `/mdy-daf-companion:open-player`.
+- In companion smoke, verify the player leaves the "No shiur loaded yet" state once `/prepare` resolves a current shiur.
 
 ## Release Criteria
 

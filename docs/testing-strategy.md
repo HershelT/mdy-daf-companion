@@ -28,6 +28,8 @@ Areas:
 - Progress updates persist to SQLite.
 - Resolver uses cache when offline.
 - Status formatter returns quickly.
+- `prepare` and `status` stay consistent after daemon restarts with persisted current shiur.
+- Detached daemon restart guard replaces stale healthy daemons after local rebuilds.
 
 ## Player Tests
 
@@ -39,6 +41,7 @@ Use mocked YouTube IFrame API for deterministic tests:
 - Seek.
 - Emit progress.
 - Save completion.
+- Initialize player when current shiur/video ID arrives after initial empty render.
 
 Use real Electron companion smoke tests sparingly:
 
@@ -89,6 +92,7 @@ Cover:
 - Israel date option.
 - Daylight saving changes.
 - April 19, 2026 and April 20, 2026 Menachos boundary.
+- Calendar advanced before MDY upload: strict scoring plus one-day date lookback.
 - Missed daf catch-up behavior.
 - Shabbos/Yom Tov guard windows.
 

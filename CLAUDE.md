@@ -222,6 +222,20 @@ Run `/mdy-daf-companion:status` inside Claude Code or `node dist/src/cli.js doct
 - Database integrity
 - Current resolved shiur
 
+Known operational pitfalls and fixes:
+
+- Post-midnight upload lag: the calendar can advance to the next daf before MDY uploads. Resolver logic now keeps strict exact matching and falls back one civil day only when no confident current-date match exists.
+- Stale detached daemon after local rebuild: a healthy daemon from an older build can be reused unintentionally. Startup now restarts stale daemons when build metadata or plugin root identity does not match the current runtime.
+- Companion page opening before current shiur is hydrated: daemon startup now hydrates current-shiur memory from SQLite, and the player page can now initialize YouTube after status polling if the initial page load had no video ID.
+
+When validating these paths locally:
+
+- `npm run build`
+- `node --test "dist/test/resolver.test.js"`
+- `node --test "dist/test/daemonClient.test.js"`
+- `node --test "dist/test/daemon.test.js"`
+- In a real plugin-dir session, run `/mdy-daf-companion:prepare`, `/mdy-daf-companion:status`, then `/mdy-daf-companion:open-player`.
+
 ## Documentation References
 
 - `README.md` — Feature overview and quick-start

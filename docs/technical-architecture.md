@@ -104,6 +104,12 @@ Daemon endpoints:
 - `GET /api/dashboard`
 - `GET /health`
 
+Daemon lifecycle invariants:
+
+- Startup hydrates in-memory `currentVideoId` from persisted settings so status and companion state survive process restarts.
+- Detached daemon reuse is allowed only when runtime identity matches. Startup should restart healthy stale daemons when plugin root mismatches or runtime build metadata is newer than daemon start metadata.
+- On Windows, plugin-root identity checks should be case-insensitive.
+
 ### Player
 
 Purpose:
@@ -164,6 +170,11 @@ Output:
   "durationSeconds": 3660
 }
 ```
+
+Resolver behavior notes:
+
+- Candidate scoring remains strict for exact daf/masechta title matches.
+- Date fallback is handled above scoring: if no confident current-date match exists, resolver retries with a one-day lookback window.
 
 ### Persistence
 
@@ -230,8 +241,11 @@ MDY Menachos 99 18/61m watched | code 42m
 - No network: use cache; show unresolved status; do not fail Claude Code.
 - YouTube blocked: pause automation; show actionable `doctor` result.
 - MDY source changed: fall back to YouTube title search.
+- Calendar advanced before upload: keep strict scoring and apply one-day date lookback before reporting unresolved state.
 - Daemon crashed: next hook restarts it.
+- Daemon runtime drift after rebuild: startup should replace stale healthy daemons to avoid old logic serving new sessions.
 - Player closed: daemon marks player unavailable; next resume reopens if allowed.
+- Companion opened before shiur resolution: page should poll status and initialize/cue the YouTube player when a video ID arrives later.
 - Shabbos guard active: do not auto-start; status line can show "guarded" if configured.
 
 ## Security And Privacy
