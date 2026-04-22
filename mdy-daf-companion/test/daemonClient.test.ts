@@ -42,3 +42,21 @@ test("restart is required when daemon plugin root mismatches runtime", () => {
   const restart = shouldRestartHealthyDaemon(state, paths, cliPath);
   assert.equal(restart, true);
 });
+
+test("plugin root comparison tolerates casing differences on Windows", () => {
+  const samePathDifferentCase = process.platform === "win32"
+    ? paths.pluginRoot.toUpperCase()
+    : paths.pluginRoot;
+
+  const state: DaemonStateFile = {
+    host: "127.0.0.1",
+    port: 12345,
+    token: "token",
+    pid: 123,
+    startedAt: "2099-04-22T02:00:00.000Z",
+    pluginRoot: samePathDifferentCase
+  };
+
+  const restart = shouldRestartHealthyDaemon(state, paths, cliPath);
+  assert.equal(restart, false);
+});

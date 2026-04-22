@@ -87,9 +87,13 @@ function cliBuildMtimeMs(cliPath) {
         return 0;
     }
 }
+function normalizePathForComparison(value) {
+    const resolved = path.resolve(value);
+    return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+}
 export function shouldRestartHealthyDaemon(state, paths, cliPath) {
-    const normalizedPluginRoot = path.resolve(paths.pluginRoot);
-    if (!state.pluginRoot || path.resolve(state.pluginRoot) !== normalizedPluginRoot) {
+    const normalizedPluginRoot = normalizePathForComparison(paths.pluginRoot);
+    if (!state.pluginRoot || normalizePathForComparison(state.pluginRoot) !== normalizedPluginRoot) {
         return true;
     }
     return cliBuildMtimeMs(cliPath) > daemonStartedAtMs(state);

@@ -48,6 +48,7 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
     };
     const database = new AppDatabase(paths);
     database.migrate();
+    memory.currentVideoId = database.getSetting(CURRENT_SHIUR_SETTING) || null;
     const config = loadConfig(paths);
     const today = () => civilDateInTimezone(new Date(), config.timezone);
     let pendingCurrentShiurResolve = null;
@@ -152,6 +153,7 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
                 return;
             }
             if (request.method === "GET" && url.pathname === "/companion") {
+                const currentShiur = currentShiurStatus();
                 response.writeHead(200, {
                     "content-type": "text/html; charset=utf-8",
                     "cache-control": "no-store",
@@ -159,10 +161,10 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
                 });
                 response.end(renderPlayerPage({
                     token,
-                    videoId: memory.currentVideoId,
-                    title: currentShiurStatus()?.title,
-                    initialPositionSeconds: currentShiurStatus()?.positionSeconds,
-                    completionPercent: currentShiurStatus()?.completionPercent,
+                    videoId: currentShiur?.videoId || memory.currentVideoId,
+                    title: currentShiur?.title,
+                    initialPositionSeconds: currentShiur?.positionSeconds,
+                    completionPercent: currentShiur?.completionPercent,
                     playbackState: memory.playbackState,
                     companionMode: true
                 }));

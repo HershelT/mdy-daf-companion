@@ -295,6 +295,40 @@ test("daemon serves dashboard data for the Electron companion", async () => {
   }
 });
 
+test("daemon companion bootstrap uses persisted current shiur when memory is empty", async () => {
+  const paths = tempPaths();
+  const database = new AppDatabase(paths);
+  database.migrate();
+  database.setSetting(CURRENT_SHIUR_SETTING, "video-1");
+  database.upsertVideo({
+    id: "video-1",
+    videoId: "video-1",
+    source: "test",
+    sourceUrl: "https://www.youtube.com/watch?v=video-1",
+    title: "Daf Yomi Menachos Daf 100",
+    language: "english",
+    format: "full",
+    masechta: "Menachos",
+    daf: 100,
+    durationSeconds: 3600,
+    publishedAt: null,
+    confidence: 1,
+    rawMetadataJson: null
+  });
+  database.close();
+
+  const daemon = await startDaemonServer(paths);
+  try {
+    const response = await fetch(`http://127.0.0.1:${daemon.port}/companion?token=${daemon.token}`);
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /videoId: "video-1"/);
+    assert.match(html, /youtube.com\/embed\/video-1/);
+  } finally {
+    await daemon.close();
+  }
+});
+
 
 test("daemon aggregates watched seconds from forward progress", async () => {
   const paths = tempPaths();

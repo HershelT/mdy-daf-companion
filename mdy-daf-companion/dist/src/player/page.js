@@ -505,8 +505,8 @@ export function renderPlayerPage(options) {
   </script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    function onYouTubeIframeAPIReady() {
-      if (!MDY_DAF.videoId) return;
+    function createYouTubePlayer() {
+      if (!MDY_DAF.videoId || MDY_DAF.player || !window.YT?.Player) return;
       MDY_DAF.player = new YT.Player("player", {
         videoId: MDY_DAF.videoId,
         playerVars: {
@@ -528,6 +528,10 @@ export function renderPlayerPage(options) {
       });
     }
 
+    function onYouTubeIframeAPIReady() {
+      createYouTubePlayer();
+    }
+
     function setStateLabel(state) {
       document.getElementById("state").textContent = state || "idle";
     }
@@ -538,9 +542,18 @@ export function renderPlayerPage(options) {
       if (typeof shiur.completionPercent === "number") {
         document.getElementById("progress").value = Math.max(0, Math.min(100, shiur.completionPercent));
       }
-      if (shiur.videoId && shiur.videoId !== MDY_DAF.videoId) {
+      const hasNewVideoId = Boolean(shiur.videoId && shiur.videoId !== MDY_DAF.videoId);
+      if (hasNewVideoId) {
         MDY_DAF.videoId = shiur.videoId;
         MDY_DAF.initialPositionSeconds = Math.max(0, shiur.positionSeconds || 0);
+      }
+
+      if (!MDY_DAF.player && MDY_DAF.videoId) {
+        createYouTubePlayer();
+        return;
+      }
+
+      if (hasNewVideoId) {
         const loadMethod = MDY_DAF.desiredPlaybackState === "playing" && MDY_DAF.player?.loadVideoById
           ? "loadVideoById"
           : "cueVideoById";
