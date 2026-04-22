@@ -125,7 +125,7 @@ Implementation target:
 Recommendation:
 
 - For public v1, use the Electron companion as the only video playback surface. If Electron is missing, report setup guidance and keep Claude Code running; do not open a regular browser fallback.
-- Package the companion with Electron Packager for Windows, macOS, and Linux release archives. Development installs can use the local `electron` dependency, but published releases should include the matching packaged folder under `out/`.
+- Public npm releases install Electron as a runtime dependency and launch the companion through `node_modules/electron/cli.js`. Electron Packager scripts remain for optional native smoke testing and future signed app distribution; generated `out/` folders are not part of the npm tarball.
 
 ### Resolver
 

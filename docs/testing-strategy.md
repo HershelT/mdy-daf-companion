@@ -58,6 +58,7 @@ Guard the product decisions that should not regress:
 - Runtime source does not call `shell.openExternal` or other browser opener fallbacks.
 - Electron blocks external navigation instead of launching a browser.
 - Packaged companion lookup prefers `out/mdy-daf-companion-<platform>-<arch>` over the development Electron runtime.
+- Public npm package verification excludes generated `out/` bundles and fails on oversized tarballs.
 
 ## Claude Code Hook Contract Tests
 
@@ -107,9 +108,11 @@ Before release:
 
 - Run `claude plugin validate`.
 - Run unit and integration tests.
-- Run `npm run package:companion:win`, `npm run package:companion:mac`, and `npm run package:companion:linux` on appropriate build hosts.
+- Run `npm run verify:current-daf`.
+- Run `npm run verify:npm-package`.
+- Optionally run `npm run package:companion:win`, `npm run package:companion:mac`, and `npm run package:companion:linux` on appropriate build hosts for native bundle smoke tests.
 - Run Windows, macOS, and Linux smoke tests.
-- Launch a packaged companion through `mdy-daf open-player` and inspect the Electron capture/log.
+- Launch the companion through `mdy-daf open-player` and inspect the Electron capture/log.
 - Confirm no secrets or API keys are committed.
 - Verify README installation instructions.
 - Verify uninstall leaves user data policy clear.

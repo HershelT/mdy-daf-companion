@@ -51,7 +51,7 @@ node dist/src/cli.js start-daemon
 ### Plugin Installation and Testing
 
 ```bash
-# Build and package for release or local UI validation
+# Optional native companion packaging for local UI validation
 npm run package:companion:win    # Windows x64
 npm run package:companion:mac    # macOS arm64 + x64
 npm run package:companion:linux  # Linux x64
@@ -201,17 +201,12 @@ For public release:
 
 1. Build and test locally: `npm run check`
 2. Verify clean first-run current-Daf resolution: `npm run verify:current-daf`
-3. Package for each platform:
-   ```bash
-   npm run package:companion:win
-   npm run package:companion:mac
-   npm run package:companion:linux
-   ```
-4. The output folders in `out/` include bundled Electron binaries so users do not need `npm install` or the dev Electron dependency.
-5. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it builds platform bundles, runs `npm run release:prepare`, supports one-time bootstrap token publishing, and supports npm trusted publishing after npm package setup.
+3. Verify the public npm package surface: `npm run verify:npm-package`
+4. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it runs `npm run release:prepare`, supports one-time bootstrap token publishing, and supports npm trusted publishing after npm package setup.
+5. The public npm tarball must not include generated `out/` Electron app bundles. Electron is declared as a runtime dependency and launched through `node_modules/electron/cli.js`.
 6. After publication, users install from the GitHub marketplace with `claude plugin marketplace add OWNER/REPO` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
 
-Repackage Electron whenever `desktop/electron/**`, `src/player/**`, companion launcher behavior, Electron dependencies, or packaged runtime files change.
+Use `package:companion:*` when validating optional native bundles, future signed app distribution, or platform-specific Electron shell behavior.
 
 ## Troubleshooting
 

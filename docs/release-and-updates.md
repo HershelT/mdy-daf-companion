@@ -6,9 +6,9 @@ This project is designed to ship as a Claude Code marketplace plus an npm packag
 
 - The marketplace repository contains `.claude-plugin/marketplace.json`.
 - The plugin package is `mdy-daf-companion` on npm.
-- The npm package contains the Claude plugin files, compiled runtime, and packaged Electron companion bundles.
+- The npm package contains the Claude plugin files, compiled runtime, Electron shell source, and Electron as an npm runtime dependency.
 
-Claude Code marketplace entries support npm plugin sources, and installed marketplace plugins are copied into Claude's local plugin cache. That means the package must be self-contained; runtime files cannot live outside the plugin directory.
+Claude Code marketplace entries support npm plugin sources, and installed marketplace plugins are copied into Claude's local plugin cache. The package must contain the plugin runtime and declare runtime dependencies needed for the floating companion.
 
 ## Public Install
 
@@ -60,20 +60,14 @@ The verifier creates a clean temporary data directory, uses no setup file, asks 
 
 ## Release Preparation
 
-For a Windows-only beta package:
+For an optional Windows native companion smoke:
 
 ```bash
 cd mdy-daf-companion
 npm run release:prepare:win
 ```
 
-For a public all-platform release, use the GitHub Actions workflow `Release MDY Daf Companion`. It builds Electron companions on:
-
-- `windows-latest` for `win32-x64`.
-- `ubuntu-latest` for `linux-x64`.
-- `macos-latest` for `darwin-arm64` and `darwin-x64`.
-
-The final job downloads all bundles into `mdy-daf-companion/out`, then runs:
+For a public release, use the GitHub Actions workflow `Release MDY Daf Companion`. It runs:
 
 ```bash
 npm run release:prepare
@@ -85,8 +79,8 @@ That command performs:
 - `claude plugin validate`.
 - Smoke validation.
 - Live current-Daf verification.
-- Presence checks for Windows, Linux, and macOS Electron bundles.
-- `npm pack --dry-run`.
+- npm package-surface verification through `npm pack --dry-run --json`.
+- A package-size and forbidden-file guard that fails if generated `out/` Electron bundles are accidentally included.
 
 ## Publishing
 
@@ -136,7 +130,7 @@ claude plugin marketplace add OWNER/REPO
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
-To publish manually from a machine that already has all platform bundles in `mdy-daf-companion/out`:
+To publish manually from a clean workspace:
 
 ```bash
 cd mdy-daf-companion
@@ -144,14 +138,14 @@ npm run release:prepare
 npm publish
 ```
 
-Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login`. Manual publish is not recommended for the public package unless all Windows, Linux, and macOS companion bundles already exist in `out/`.
+Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login`.
 
 ## Updating Efficiently
 
 For any public update:
 
 1. Make code/docs changes.
-2. If runtime, Electron, resolver, player, hook, or compiled TypeScript changed, rebuild and repackage the affected Electron bundles.
+2. If runtime, Electron, resolver, player, hook, or compiled TypeScript changed, rebuild and rerun release checks.
 3. Bump the version in:
    - `mdy-daf-companion/package.json`
    - `mdy-daf-companion/.claude-plugin/plugin.json`
@@ -178,9 +172,9 @@ claude plugin update mdy-daf-companion@mdy-daf-companion
 
 If they installed through Desktop or VS Code, they can use the plugin UI refresh/update controls instead. VS Code uses the same Claude Code marketplace system under the hood.
 
-## When Repackaging Is Required
+## When Native Repackaging Is Required
 
-Repackage Electron when any of these change:
+Native Electron packaging is optional release-hardening, not part of the public npm tarball. Repackage Electron for local/native smoke testing when any of these change:
 
 - `desktop/electron/**`
 - `src/player/**`

@@ -57,18 +57,10 @@ Use this path while developing or before the npm package exists. It does not req
 ```bash
 cd mdy-daf-companion
 npm install
-npm run package:companion:win
 npm run check
 npm run verify:current-daf
 cd ..
 claude --plugin-dir ./mdy-daf-companion
-```
-
-On macOS or Linux, replace the package command:
-
-```bash
-npm run package:companion:mac
-npm run package:companion:linux
 ```
 
 Inside the Claude session launched with `--plugin-dir`, submit a normal prompt. Expected behavior:
@@ -179,9 +171,9 @@ claude plugin marketplace add OWNER/REPO
 claude plugin install mdy-daf-companion@mdy-daf-companion
 ```
 
-The workflow builds Electron bundles on Windows, Linux, and macOS, downloads them into `mdy-daf-companion/out`, runs release verification, and publishes the self-contained npm package. Release verification is CI-safe: when the `claude` CLI is unavailable on GitHub runners, `npm run validate:plugin` falls back to manifest and file checks.
+The workflow installs dependencies, runs release verification, verifies the npm tarball contents, and publishes the plugin package. Electron is installed as an npm runtime dependency instead of bundling Windows, Linux, and macOS app folders into the package. Release verification is CI-safe: when the `claude` CLI is unavailable on GitHub runners, `npm run validate:plugin` falls back to manifest and file checks.
 
-Manual publish is possible only from a machine or CI workspace that already has all platform bundles in `mdy-daf-companion/out`:
+Manual publish is possible from a clean workspace after dependency install:
 
 ```bash
 cd mdy-daf-companion
@@ -199,7 +191,7 @@ For public updates:
    - `mdy-daf-companion/package.json`
    - `mdy-daf-companion/.claude-plugin/plugin.json`
    - `.claude-plugin/marketplace.json`
-3. Repackage Electron if player, launcher, desktop shell, bundled runtime, or Electron dependencies changed.
+3. Run the optional platform package scripts only when validating native app bundles locally; public npm releases use the Electron runtime dependency.
 4. Run:
 
 ```bash
@@ -248,19 +240,19 @@ npm run verify:current-daf
 npm publish --dry-run
 ```
 
-Windows release candidate:
+Optional native Windows companion smoke:
 
 ```bash
 npm run release:prepare:win
 ```
 
-All-platform release candidate:
+Public npm release candidate:
 
 ```bash
 npm run release:prepare
 ```
 
-`release:prepare` requires Windows, Linux, and macOS companion bundles to already exist in `out/`; normally GitHub Actions creates them.
+`release:prepare` verifies tests, plugin metadata, the live current-Daf resolver, and the npm package surface. It fails if generated Electron `out/` bundles are accidentally included in the public package.
 
 ## Documentation
 
@@ -277,7 +269,7 @@ npm run release:prepare
 
 ## Release Status
 
-This repository is a release candidate. Automated tests, plugin validation, smoke checks, Windows packaged companion launch, live current-Daf verification, npm dry-run packaging, and real Claude Code CLI hook smoke have passed locally. Public release still needs hands-on validation in Claude Desktop local sessions, VS Code extension local sessions, macOS package launch/signing, Linux package launch, and brand/legal review.
+This repository is a release candidate. Automated tests, plugin validation, smoke checks, Windows packaged companion launch, live current-Daf verification, npm package-surface verification, and real Claude Code CLI hook smoke have passed locally. Public release still needs hands-on validation in Claude Desktop local sessions, VS Code extension local sessions, optional macOS/Linux native package launch, and brand/legal review.
 
 ## License
 

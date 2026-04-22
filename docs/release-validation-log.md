@@ -23,7 +23,7 @@ Result:
 - 66 Node tests passed.
 - `claude plugin validate .` passed.
 - Smoke doctor passed.
-- Smoke confirmed packaged Electron companion detection.
+- Smoke confirmed Electron companion detection.
 
 ## Clean First-Run Current-Daf Verification
 
@@ -63,7 +63,7 @@ Commands run:
 
 ```bash
 npm run release:prepare:win
-npm publish --dry-run
+npm run verify:npm-package
 ```
 
 Result:
@@ -71,9 +71,24 @@ Result:
 - Windows companion package was rebuilt after closing stale packaged processes.
 - `npm run check` passed.
 - `npm run verify:current-daf` passed.
-- `npm pack --dry-run` and `npm publish --dry-run` included the plugin files, compiled runtime, docs, and packaged Windows/Linux companion folders currently present in `out/`.
-- `npm run release:verify-packages` verified Windows/Linux and correctly failed locally for missing macOS bundles; the all-platform release check must run in GitHub Actions or on a workspace that has generated `darwin-arm64` and `darwin-x64`.
+- `npm run verify:npm-package` confirmed the public tarball includes plugin files, compiled runtime, docs, Electron shell source, and excludes generated `out/` bundles.
 - Actual `npm publish` was not run locally because npm authentication was not configured; use `npm login` for manual publish, or use the GitHub workflow bootstrap-token mode for the first publish and trusted-publishing mode after npm package setup.
+
+## GitHub Actions Publish Failure And Fix
+
+Observed on April 21, 2026 run `24757445924`:
+
+- The bootstrap token step reached `npm publish`, so authentication was not the failing layer.
+- The tarball was `980.7 MB`, unpacked to `2.4 GB`, and contained `1707` files.
+- The largest entries were generated platform Electron bundles under `out/mdy-daf-companion-*`.
+- npm failed with `ERR_STRING_TOO_LONG`.
+
+Fix:
+
+- Removed `out/` from the npm `files` allowlist.
+- Moved `electron` to runtime `dependencies`.
+- Simplified the GitHub release workflow so npm publish does not download platform artifacts.
+- Added `npm run verify:npm-package` to block future accidental `out/` inclusion or oversized tarballs.
 
 ## Real Claude Code CLI Smoke
 

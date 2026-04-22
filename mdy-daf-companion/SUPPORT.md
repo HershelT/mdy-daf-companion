@@ -38,7 +38,7 @@ Rerun `npm run package:companion:win` after closing the companion window. The pa
 
 ### The Companion Does Not Open
 
-Run `mdy-daf doctor`. A release install should include a matching `out/mdy-daf-companion-<platform>-<arch>` folder. A development install needs `npm install` so the local Electron runtime exists.
+Run `mdy-daf doctor`. A release install should include the Electron npm runtime in `node_modules/electron`; optional native smoke builds may also include a matching `out/mdy-daf-companion-<platform>-<arch>` folder. If Electron is missing, rerun the plugin install or `npm install` in a local development checkout.
 
 The plugin intentionally does not open a regular browser fallback.
 

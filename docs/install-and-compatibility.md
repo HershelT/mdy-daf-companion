@@ -51,18 +51,10 @@ Use this before the npm package is published, or whenever you are editing the pl
 ```bash
 cd mdy-daf-companion
 npm install
-npm run package:companion:win
 npm run check
 npm run verify:current-daf
 cd ..
 claude --plugin-dir ./mdy-daf-companion
-```
-
-On macOS and Linux, replace the package command:
-
-```bash
-npm run package:companion:mac
-npm run package:companion:linux
 ```
 
 `claude --plugin-dir ./mdy-daf-companion` gives the local plugin priority for that session and avoids needing a published npm package. Reload plugins after file changes:
@@ -71,7 +63,15 @@ npm run package:companion:linux
 /reload-plugins
 ```
 
-On Windows, `npm run package:companion:win` runs a preflight cleanup before Electron Packager starts. It closes stale packaged companion processes from `out\` and removes the old output folder. If Windows still reports `EPERM` while unlinking a DLL, close MDY Daf Companion and pause OneDrive or antivirus scanning for the release folder, then rerun the command.
+Optional native companion packaging remains available for platform smoke testing:
+
+```bash
+npm run package:companion:win
+npm run package:companion:mac
+npm run package:companion:linux
+```
+
+On Windows, `npm run package:companion:win` runs a preflight cleanup before Electron Packager starts. It closes stale packaged companion processes from `out\` and removes the old output folder. If Windows still reports `EPERM` while unlinking a DLL, close MDY Daf Companion and pause OneDrive or antivirus scanning for the release folder, then rerun the command. These `out/` bundles are not included in the public npm package.
 
 ## Initial Load Behavior
 
@@ -227,7 +227,7 @@ mdy-daf open-player
 If Electron does not open:
 
 1. Run `mdy-daf doctor`.
-2. For a release install, confirm the matching packaged companion folder exists under `out/`.
+2. For a release install, confirm the plugin installation includes `node_modules/electron`.
 3. For a development install, run `npm install` in `mdy-daf-companion`.
 4. Re-run `mdy-daf open-player`.
 

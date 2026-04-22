@@ -89,7 +89,8 @@ Exit status: beta-ready.
 - Completed: Electron Packager release scripts and Windows packaged companion smoke.
 - Completed: Plugin user configuration.
 - Completed: npm-backed marketplace metadata.
-- Completed: GitHub Actions release workflow for platform packaging and npm publish.
+- Completed: GitHub Actions release workflow for npm package verification and publish.
+- Completed: npm package-surface guard that excludes generated platform Electron bundles from public publish.
 - Completed: Current-Daf first-run verifier.
 - Completed: Versioning and changelog.
 - Pending: Beta testing with real Claude Code users.

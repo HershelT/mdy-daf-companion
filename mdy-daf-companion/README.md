@@ -22,7 +22,7 @@ This is an independent project. It is not affiliated with or endorsed by Mercaz 
 - Node.js 24 or newer.
 - Internet access for Hebcal, MDY/YouTube metadata, and YouTube playback.
 - Local Claude session access for automatic Electron playback.
-- Packaged Electron companion bundles for release installs, or the local `electron` dev dependency for development.
+- Electron runtime installed by npm.
 
 Remote/cloud Claude sessions are not supported for local playback. SSH/dev-container sessions are partial because the daemon and Electron companion run wherever Claude Code runs.
 
@@ -46,18 +46,10 @@ From the repository root:
 ```bash
 cd mdy-daf-companion
 npm install
-npm run package:companion:win
 npm run check
 npm run verify:current-daf
 cd ..
 claude --plugin-dir ./mdy-daf-companion
-```
-
-On macOS or Linux, replace the package command:
-
-```bash
-npm run package:companion:mac
-npm run package:companion:linux
 ```
 
 Inside the Claude session, submit a normal prompt. The companion should open automatically from the `UserPromptSubmit` hook. Manual commands:
@@ -193,15 +185,15 @@ Release checks:
 
 ```bash
 npm run verify:current-daf
-npm run release:prepare:win
-npm publish --dry-run
+npm run verify:npm-package
+npm run release:prepare
 ```
 
-`out/` contains generated Electron bundles and is intentionally ignored by git.
+`out/` contains generated Electron bundles for optional native smoke testing and is intentionally ignored by git. It is not included in the public npm package.
 
 ## Publish And Update
 
-The public release is an npm package referenced by a GitHub-hosted Claude Code marketplace.
+The public release is an npm package referenced by a GitHub-hosted Claude Code marketplace. The package installs Electron as a normal npm runtime dependency; it does not publish platform-specific Electron app folders.
 
 Publish through GitHub Actions:
 
@@ -212,7 +204,7 @@ Publish through GitHub Actions:
 5. After npm creates the package, configure npm trusted publishing for this workflow.
 6. For later releases, run with `publish_auth` set to `trusted-publishing`.
 
-Manual publish from a workspace that already contains all platform bundles:
+Manual publish from a clean workspace:
 
 ```bash
 npm login
@@ -220,7 +212,7 @@ npm run release:prepare
 npm publish
 ```
 
-When changing code, repackage Electron if the companion shell, player page, launcher, Electron dependency, or bundled runtime changes. For public updates, bump `package.json`, `.claude-plugin/plugin.json`, and the root marketplace version before publishing.
+When changing code, rerun `npm run release:prepare` before publishing. Use `package:companion:*` only for optional native bundle smoke tests. For public updates, bump `package.json`, `.claude-plugin/plugin.json`, and the root marketplace version before publishing.
 
 ## Compatibility
 
@@ -249,7 +241,7 @@ See [PRIVACY.md](PRIVACY.md), [SECURITY.md](SECURITY.md), and [SUPPORT.md](SUPPO
 
 ## Release Status
 
-This is a release candidate. Automated tests, plugin validation, smoke checks, Windows packaged companion launch, live current-Daf verification, npm dry-run packaging, and real Claude Code CLI hook smoke have passed locally. Remaining public-release validation includes hands-on Claude Desktop local, VS Code extension local, macOS package launch/signing, Linux package launch, and brand/legal review.
+This is a release candidate. Automated tests, plugin validation, smoke checks, Windows packaged companion launch, live current-Daf verification, npm package-surface verification, and real Claude Code CLI hook smoke have passed locally. Remaining public-release validation includes hands-on Claude Desktop local, VS Code extension local, optional macOS/Linux native package launch, and brand/legal review.
 
 ## License
 
