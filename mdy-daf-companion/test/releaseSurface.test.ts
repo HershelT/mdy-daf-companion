@@ -33,3 +33,17 @@ test("daemon keeps dashboard user interface inside companion route", () => {
   assert.match(player, /id=["']dashboard-view["']/);
   assert.match(player, /fetch\(["']\/api\/dashboard["']/);
 });
+
+test("Electron companion hardens logs, captures, and navigation surface", () => {
+  const electron = readProjectFile("desktop/electron/main.cjs");
+
+  assert.match(electron, /redactUrl/);
+  assert.match(electron, /redactArgv\(process\.argv\)/);
+  assert.doesNotMatch(electron, /JSON\.stringify\(process\.argv\)/);
+  assert.match(electron, /MDY_DAF_DEBUG_CAPTURE/);
+  assert.match(electron, /isLocalCompanionUrl/);
+  assert.match(electron, /setWindowOpenHandler/);
+  assert.match(electron, /nodeIntegration:\s*false/);
+  assert.match(electron, /contextIsolation:\s*true/);
+  assert.match(electron, /sandbox:\s*true/);
+});

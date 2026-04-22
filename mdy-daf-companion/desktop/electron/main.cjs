@@ -4,6 +4,16 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 
+const SENSITIVE_QUERY_NAMES = new Set([
+  "token",
+  "auth",
+  "authorization",
+  "access_token",
+  "api_key",
+  "key",
+  "youtube_api_key"
+]);
+
 function argValue(name, fallback = null) {
   const index = process.argv.indexOf(name);
   return index >= 0 && process.argv[index + 1] ? process.argv[index + 1] : fallback;
@@ -34,12 +44,52 @@ function lastCapturePath() {
   return path.join(dataRoot(), "companion-last.png");
 }
 
+function debugCaptureEnabled() {
+  return process.env.MDY_DAF_DEBUG_CAPTURE === "1";
+}
+
+function redactUrl(value) {
+  if (typeof value !== "string" || value.length === 0) {
+    return value;
+  }
+
+  try {
+    const parsed = new URL(value);
+    for (const name of Array.from(parsed.searchParams.keys())) {
+      if (SENSITIVE_QUERY_NAMES.has(name.toLowerCase())) {
+        parsed.searchParams.set(name, "[redacted]");
+      }
+    }
+    return parsed.toString();
+  } catch {
+    return value.replace(
+      /([?&](?:token|auth|authorization|access_token|api_key|key|youtube_api_key)=)[^&\s]+/gi,
+      "$1[redacted]"
+    );
+  }
+}
+
+function redactArgv(argv) {
+  return argv.map((value, index) => {
+    const previous = argv[index - 1] || "";
+    if (/token|key|secret|authorization/i.test(previous)) {
+      return "[redacted]";
+    }
+    return redactUrl(value);
+  });
+}
+
+function redactLogText(value) {
+  return redactUrl(String(value));
+}
+
 function log(message, error) {
   try {
+    const details = error ? ` ${redactLogText(error.stack || error.message || error)}` : "";
     fs.mkdirSync(dataRoot(), { recursive: true });
     fs.appendFileSync(
       logPath(),
-      `${new Date().toISOString()} ${message}${error ? ` ${error.stack || error.message || error}` : ""}\n`,
+      `${new Date().toISOString()} ${redactLogText(message)}${details}\n`,
       "utf8"
     );
   } catch {
@@ -56,7 +106,42 @@ process.on("unhandledRejection", (error) => {
   log("unhandledRejection", error);
 });
 
-log(`main-start argv=${JSON.stringify(process.argv)}`);
+log(`main-start argv=${JSON.stringify(redactArgv(process.argv))}`);
+
+function urlOrigin(value) {
+  try {
+    const origin = new URL(value).origin;
+    return origin === "null" ? null : origin;
+  } catch {
+    return null;
+  }
+}
+
+function isLocalCompanionUrl(value) {
+  if (value === "about:blank") {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(value);
+    const localHost =
+      parsed.hostname === "127.0.0.1" ||
+      parsed.hostname === "localhost" ||
+      parsed.hostname === "::1" ||
+      parsed.hostname === "[::1]";
+    return parsed.protocol === "http:" && localHost && parsed.pathname === "/companion";
+  } catch {
+    return false;
+  }
+}
+
+function safeCompanionUrl(value) {
+  if (isLocalCompanionUrl(value)) {
+    return value;
+  }
+  log(`blocked invalid companion url=${redactUrl(value)}`);
+  return "about:blank";
+}
 
 function readWindowState() {
   try {
@@ -110,11 +195,13 @@ function loadPlayerUrl(url) {
   if (!mainWindow || mainWindow.isDestroyed()) {
     return;
   }
-  mainWindow.loadURL(url);
+  const nextUrl = safeCompanionUrl(url);
+  mainWindow.loadURL(nextUrl);
 }
 
 function createWindow() {
-  log(`createWindow url=${companionUrl()}`);
+  const initialUrl = safeCompanionUrl(companionUrl());
+  log(`createWindow url=${redactUrl(initialUrl)}`);
   const state = readWindowState();
   mainWindow = new BrowserWindow({
     width: state.bounds.width || 430,
@@ -137,11 +224,14 @@ function createWindow() {
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    log(`blocked external window url=${url}`);
+    log(`blocked external window url=${redactUrl(url)}`);
     return { action: "deny" };
   });
 
   async function captureCompanion(label) {
+    if (!debugCaptureEnabled()) {
+      return;
+    }
     if (!mainWindow || mainWindow.isDestroyed()) {
       return;
     }
@@ -155,14 +245,14 @@ function createWindow() {
   }
 
   mainWindow.webContents.on("did-finish-load", async () => {
-    log(`did-finish-load url=${mainWindow.webContents.getURL()} title=${mainWindow.webContents.getTitle()}`);
+    log(`did-finish-load url=${redactUrl(mainWindow.webContents.getURL())} title=${mainWindow.webContents.getTitle()}`);
     await captureCompanion("load");
     setTimeout(() => captureCompanion("2s"), 2000);
     setTimeout(() => captureCompanion("6s"), 6000);
   });
 
   mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedUrl) => {
-    log(`did-fail-load code=${errorCode} description=${errorDescription} url=${validatedUrl}`);
+    log(`did-fail-load code=${errorCode} description=${errorDescription} url=${redactUrl(validatedUrl)}`);
   });
 
   mainWindow.webContents.on("console-message", (_event, level, message) => {
@@ -171,11 +261,16 @@ function createWindow() {
 
   mainWindow.webContents.on("will-navigate", (event, targetUrl) => {
     const current = mainWindow.webContents.getURL();
-    const currentOrigin = current ? new URL(current).origin : null;
-    const targetOrigin = targetUrl ? new URL(targetUrl).origin : null;
-    if (currentOrigin && targetOrigin && currentOrigin !== targetOrigin) {
+    const currentOrigin = current ? urlOrigin(current) : null;
+    const targetOrigin = targetUrl ? urlOrigin(targetUrl) : null;
+    if (!targetOrigin) {
       event.preventDefault();
-      log(`blocked external navigation url=${targetUrl}`);
+      log(`blocked invalid navigation url=${redactUrl(targetUrl)}`);
+      return;
+    }
+    if (currentOrigin && currentOrigin !== targetOrigin) {
+      event.preventDefault();
+      log(`blocked external navigation url=${redactUrl(targetUrl)}`);
     }
   });
 
@@ -187,10 +282,10 @@ function createWindow() {
   mainWindow.on("move", () => saveWindowState(mainWindow));
   mainWindow.on("close", () => saveWindowState(mainWindow));
 
-  loadPlayerUrl(companionUrl());
+  loadPlayerUrl(initialUrl);
 }
 
-const gotLock = app.requestSingleInstanceLock({ url: companionUrl(), dataRoot: dataRoot() });
+const gotLock = app.requestSingleInstanceLock({ url: safeCompanionUrl(companionUrl()), dataRoot: dataRoot() });
 if (!gotLock) {
   log("single-instance-lock denied");
   app.quit();
@@ -204,8 +299,10 @@ if (!gotLock) {
     if (!mainWindow || mainWindow.isDestroyed()) {
       createWindow();
     }
-    if (nextUrl) {
+    if (nextUrl && isLocalCompanionUrl(nextUrl)) {
       loadPlayerUrl(nextUrl);
+    } else if (nextUrl) {
+      log(`blocked second-instance url=${redactUrl(nextUrl)}`);
     }
     focusWindow();
   });

@@ -4,6 +4,9 @@
 
 - Added release/versioning guidance for future agents.
 - Bumped package, plugin, and marketplace metadata to `0.1.1`.
+- Hardened Electron companion URL validation, token redaction, and debug screenshot behavior.
+- Removed the legacy npm token bootstrap release path now that trusted publishing is configured.
+- Added a comprehensive security and stale-artifact audit prompt for future review passes.
 
 ## 0.1.0 - 2026-04-22
 

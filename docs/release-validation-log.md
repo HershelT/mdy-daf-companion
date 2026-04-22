@@ -1,6 +1,6 @@
 # Release Validation Log
 
-Last updated: April 21, 2026.
+Last updated: April 22, 2026.
 
 This log records concrete release validation for the public 0.1.x package line. It is intentionally separate from the roadmap so future release agents can see what was actually run.
 
@@ -55,7 +55,7 @@ Result:
 - `mdy-daf doctor` found `out/mdy-daf-companion-win32-x64/mdy-daf-companion.exe`.
 - `mdy-daf prepare --date 2026-04-20` resolved Menachos 99 to `H9vgAHT7aKo`.
 - `mdy-daf open-player` launched the packaged `.exe`.
-- Electron loaded `/companion`, captured `companion-last.png`, and rendered nonblank YouTube content.
+- Electron loaded `/companion` and rendered nonblank YouTube content. Debug renderer screenshots now require `MDY_DAF_DEBUG_CAPTURE=1`.
 
 ## Release Packaging Dry Run
 
@@ -72,13 +72,13 @@ Result:
 - `npm run check` passed.
 - `npm run verify:current-daf` passed.
 - `npm run verify:npm-package` confirmed the public tarball includes plugin files, compiled runtime, docs, Electron shell source, and excludes generated `out/` bundles.
-- Actual `npm publish` was not run locally because npm authentication was not configured; use `npm login` for manual publish, or use the GitHub workflow bootstrap-token mode for the first publish and trusted-publishing mode after npm package setup.
+- Actual `npm publish` should normally run through the GitHub Actions trusted-publishing workflow. Use local `npm login` only for emergency manual maintainer publishes.
 
 ## GitHub Actions Publish Failure And Fix
 
 Observed on April 21, 2026 run `24757445924`:
 
-- The bootstrap token step reached `npm publish`, so authentication was not the failing layer.
+- The original bootstrap-token step reached `npm publish`, so authentication was not the failing layer.
 - The tarball was `980.7 MB`, unpacked to `2.4 GB`, and contained `1707` files.
 - The largest entries were generated platform Electron bundles under `out/mdy-daf-companion-*`.
 - npm failed with `ERR_STRING_TOO_LONG`.
@@ -91,6 +91,7 @@ Fix:
 - Added `npm run verify:npm-package` to block future accidental `out/` inclusion or oversized tarballs.
 - Tightened current-Daf verification so the parsed resolved title must match Hebcal, not only the stored daf metadata.
 - Pinned release workflow timezone to `America/Chicago` so CI does not roll into the next Daf Yomi date before the target local release day.
+- Removed the bootstrap-token workflow path after trusted publishing was configured.
 
 ## Real Claude Code CLI Smoke
 
@@ -113,7 +114,7 @@ Result:
   - `SessionStart:startup` returned `prepare`.
   - `UserPromptSubmit` returned `resume`.
   - `Stop` returned `pause_done`.
-- The companion data directory captured a fresh `companion-last.png`, confirming the Electron auto-open path ran from the real hook flow.
+- The Electron companion auto-open path ran from the real hook flow. Renderer screenshots are now opt-in through `MDY_DAF_DEBUG_CAPTURE=1`.
 
 ## Browser Removal Validation
 

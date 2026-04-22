@@ -1,6 +1,6 @@
 # Support
 
-Last updated: April 21, 2026.
+Last updated: April 22, 2026.
 
 MDY Daf Companion is an independent Claude Code plugin. It is not affiliated with or endorsed by Mercaz Daf Yomi, Rabbi Eli Stefansky, YouTube, Google, Anthropic, or Claude unless a future partnership is explicitly announced.
 
@@ -80,4 +80,6 @@ Include:
 - Whether `mdy-daf open-player` works from a terminal.
 - Relevant lines from `${CLAUDE_PLUGIN_DATA}/companion.log`, with tokens removed.
 
-Do not include private prompts, source code, file contents, API keys, bearer tokens, or unrelated project data.
+The current companion redacts token-like URL query values in its own logs, but still review logs before sharing. Renderer screenshots are opt-in through `MDY_DAF_DEBUG_CAPTURE=1`; do not include `companion-last.png` unless you have verified it contains no private screen content.
+
+Do not include private prompts, source code, file contents, API keys, bearer tokens, screenshots with private data, or unrelated project data.

@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: April 21, 2026.
+Last updated: April 22, 2026.
 
 MDY Daf Companion is designed to be local-first.
 
@@ -46,6 +46,8 @@ The plugin does not send local watch/coding stats to this project, MDY, Anthropi
 The daemon binds to `127.0.0.1` and protects local API calls with a random bearer token stored in plugin data.
 
 The Electron companion loads the daemon's local `/companion` route and embeds the official YouTube iframe. It blocks external navigation and popup attempts instead of opening a regular browser fallback.
+
+Companion logs redact bearer tokens and API-key-like query parameters. Renderer screenshots are not written during normal use. If `MDY_DAF_DEBUG_CAPTURE=1` is set for local troubleshooting, the companion may write `companion-last.png` under the plugin data directory; review and delete that file before sharing logs.
 
 ## Telemetry
 

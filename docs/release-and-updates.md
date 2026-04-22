@@ -103,17 +103,9 @@ git push -u origin main
 The root `.claude-plugin/marketplace.json` references the npm package source. Public install will not work until both pieces exist:
 
 - The GitHub repository is reachable by Claude Code as `HershelT/mdy-daf-companion`.
-- `mdy-daf-companion@0.1.0` is published to npm.
+- the matching `mdy-daf-companion@X.Y.Z` package is published to npm.
 
-To bootstrap the first publish through GitHub Actions:
-
-1. Add a short-lived granular npm token as the repository secret `NPM_TOKEN`.
-2. Run `Release MDY Daf Companion`.
-3. Set `publish` to `true`.
-4. Set `publish_auth` to `npm-token-bootstrap`.
-5. Confirm the workflow publishes `mdy-daf-companion@0.1.0`.
-
-After npm creates the package, configure trusted publishing on npm for:
+The package is configured for npm trusted publishing. In npm package settings, the trusted publisher should be:
 
 - Owner: `HershelT`
 - Repository: `mdy-daf-companion`
@@ -121,7 +113,9 @@ After npm creates the package, configure trusted publishing on npm for:
 - Package directory: `mdy-daf-companion`
 - Environment: leave blank unless GitHub environments are added later
 
-For later releases, run `Release MDY Daf Companion` with `publish=true` and `publish_auth=trusted-publishing`. The trusted path uses GitHub OIDC with `id-token: write` and does not require `NPM_TOKEN`.
+For public releases, run `Release MDY Daf Companion` with `publish=true`. The workflow uses GitHub OIDC with `id-token: write`, lets npm issue short-lived publish credentials, and does not require `NPM_TOKEN`.
+
+After trusted publishing is verified, npm recommends using the most restrictive package publishing access setting and revoking old automation tokens.
 
 Validate public install from a clean Claude Code session:
 
@@ -138,7 +132,7 @@ npm run release:prepare
 npm publish
 ```
 
-Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login`.
+Local manual publish currently requires npm authentication. If `npm whoami` returns `ENEEDAUTH`, run `npm login`. Manual publishing should be reserved for emergency maintainer use; the normal path is the trusted GitHub Actions workflow.
 
 ## Updating Efficiently
 
@@ -189,3 +183,13 @@ npm run build
 ```
 
 Re-run the full release workflow for public releases even if the change looks documentation-only, because `npm pack --dry-run` and plugin validation catch packaging drift.
+
+## Debug Capture
+
+The Electron companion does not write renderer screenshots during normal use. For local UI diagnosis only, set:
+
+```bash
+MDY_DAF_DEBUG_CAPTURE=1
+```
+
+With that flag enabled, the companion may write `companion-last.png` under the plugin data directory. Do not include that file in bug reports unless you have checked that it contains no private screen content.

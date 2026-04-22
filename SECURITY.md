@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-This repository currently supports the unreleased `0.1.x` beta line.
+This repository currently supports the public `0.1.x` release line.
 
 ## Reporting A Vulnerability
 
@@ -19,7 +19,8 @@ Include:
 
 - The daemon binds to `127.0.0.1`.
 - Local API calls require a random bearer token.
+- Electron companion logs redact bearer tokens and API-key-like URL query parameters.
+- Electron renderer screenshots are disabled by default and require `MDY_DAF_DEBUG_CAPTURE=1`.
 - Persistent state is stored in `${CLAUDE_PLUGIN_DATA}`.
 - YouTube videos are embedded, not downloaded.
 - Sensitive plugin options such as `youtube_api_key` should be handled through Claude Code plugin user configuration.
-

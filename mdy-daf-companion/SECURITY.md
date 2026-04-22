@@ -18,6 +18,9 @@ MDY Daf Companion is a local-first Claude Code plugin. It starts a localhost dae
 - The Electron companion is the only supported playback surface.
 - Browser fallback launchers are intentionally unsupported.
 - External Electron navigations and popups are blocked.
+- Electron launch URLs are restricted to the local `/companion` route.
+- Companion logs redact bearer tokens and API-key-like URL query parameters.
+- Renderer screenshots are disabled by default and require `MDY_DAF_DEBUG_CAPTURE=1`.
 - YouTube playback uses the official YouTube IFrame surface.
 - The plugin must not download, mirror, transcode, or redistribute YouTube videos.
 - API keys and personal settings must stay out of the repository.
@@ -50,6 +53,8 @@ Before each public release:
 - Run `mdy-daf doctor`.
 - Verify `/player` and `/dashboard` standalone HTML routes remain removed.
 - Verify no `shell.openExternal` or browser fallback code exists.
+- Verify Electron logs do not contain local bearer tokens.
+- Verify debug screenshots are opt-in only and generated files are not committed.
 - Verify packaged Electron launch works on each target OS.
 - Review `package-lock.json` and run `npm audit`.
 - Confirm no secrets or API keys are committed.
