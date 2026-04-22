@@ -79,6 +79,17 @@ Before each public release:
 - Privacy policy, README, and marketplace listing are present.
 - No API keys are committed.
 
+## Versioning And Publishing
+
+When preparing a new public version:
+
+- Choose the next SemVer version and run `npm version X.Y.Z --no-git-tag-version` from `mdy-daf-companion/`.
+- Update `mdy-daf-companion/.claude-plugin/plugin.json`, the root `.claude-plugin/marketplace.json`, and `mdy-daf-companion/CHANGELOG.md` to the same version.
+- Keep the marketplace npm source version aligned with the package version. A mismatch can make Claude Code install an older package than the README describes.
+- Run `npm run release:prepare` from `mdy-daf-companion/` and `claude plugin validate .` from the repository root before publishing.
+- Publish through the GitHub Actions `Release MDY Daf Companion` workflow using npm trusted publishing. Do not reintroduce long-lived npm token publishing unless trusted publishing is unavailable and the token is short-lived.
+- Commit the release changes without any co-author trailer, then tag only after the npm publish and marketplace update are verified.
+
 ## Collaboration
 
 When a future agent works here, read the specs first, then make a narrow implementation plan. If the work touches user-facing behavior, update the product spec or technical architecture as part of the same change.

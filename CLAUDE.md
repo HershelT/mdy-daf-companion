@@ -199,12 +199,16 @@ The setup command writes these to the plugin data directory.
 
 For public release:
 
-1. Build and test locally: `npm run check`
-2. Verify clean first-run current-Daf resolution: `npm run verify:current-daf`
-3. Verify the public npm package surface: `npm run verify:npm-package`
-4. For public release, prefer the GitHub Actions workflow `Release MDY Daf Companion`; it runs `npm run release:prepare`, supports one-time bootstrap token publishing, and supports npm trusted publishing after npm package setup.
-5. The public npm tarball must not include generated `out/` Electron app bundles. Electron is declared as a runtime dependency and launched through `node_modules/electron/cli.js`.
-6. Users install from the GitHub marketplace with `claude plugin marketplace add HershelT/mdy-daf-companion` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
+1. Choose the next SemVer version.
+2. From `mdy-daf-companion/`, run `npm version X.Y.Z --no-git-tag-version`.
+3. Update `mdy-daf-companion/.claude-plugin/plugin.json`, root `.claude-plugin/marketplace.json`, and `mdy-daf-companion/CHANGELOG.md` to the same version.
+4. Run `npm run release:prepare`.
+5. From the repository root, run `claude plugin validate .`.
+6. Publish through the GitHub Actions workflow `Release MDY Daf Companion` with `publish=true`. It uses npm trusted publishing and should not require `NPM_TOKEN`.
+7. The public npm tarball must not include generated `out/` Electron app bundles. Electron is declared as a runtime dependency and launched through `node_modules/electron/cli.js`.
+8. Users install from the GitHub marketplace with `claude plugin marketplace add HershelT/mdy-daf-companion` and `claude plugin install mdy-daf-companion@mdy-daf-companion`.
+
+Do not add a co-author trailer to release commits. Tag the release only after npm and marketplace installation are verified.
 
 Use `package:companion:*` when validating optional native bundles, future signed app distribution, or platform-specific Electron shell behavior.
 
