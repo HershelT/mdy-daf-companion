@@ -67,6 +67,23 @@ Keep those files current when new facts change the product design.
 - Prefer small, testable modules over one large script.
 - Do not log transcript content or code diffs unless the user explicitly opts into advanced analytics. Default coding stats should use timing and event categories, not project contents.
 
+## Operational Learnings (April 2026)
+
+- Keep resolver scoring strict for exact daf and masechta matching, but handle post-midnight upload gaps with a date-level fallback window. The current policy is one-day lookback when no confident current-date match is found.
+- The daemon is detached and long-lived. Always guard against stale-runtime drift after rebuilds by validating daemon metadata and restarting healthy stale processes when runtime/plugin identity has changed.
+- Hydrate in-memory current-shiur state from persisted storage at daemon startup, so `/status`, `/prepare`, and `/companion` remain consistent across restarts.
+- Companion/player bootstrapping must handle late-arriving video IDs. If the page initially renders with no video, status polling should still initialize the YouTube player once a shiur becomes available.
+- On Windows, compare plugin paths case-insensitively when deciding whether daemon state belongs to the same runtime.
+- Do not assume resolver failures are always source-adapter outages. Troubleshooting and command guidance should explicitly include "next daf date advanced before upload" and "no confident title match" as likely causes.
+
+Regression checks to run before release:
+
+- `npm run build`
+- `node --test "dist/test/resolver.test.js"`
+- `node --test "dist/test/daemonClient.test.js"`
+- `node --test "dist/test/daemon.test.js"`
+- Real session smoke via plugin-dir: run `/mdy-daf-companion:prepare`, `/mdy-daf-companion:status`, and `/mdy-daf-companion:open-player`.
+
 ## Release Criteria
 
 Before each public release:

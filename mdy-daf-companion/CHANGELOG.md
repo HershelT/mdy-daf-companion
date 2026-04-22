@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3 - 2026-04-22
+
+- Added resolver-level previous-date fallback (1-day lookback) when exact current-date shiur is not yet uploaded.
+- Kept strict exact daf/masechta scoring while shifting fallback logic to date orchestration.
+- Hardened daemon startup to restart stale healthy daemons when runtime build metadata is newer or plugin roots do not match.
+- Hydrated daemon in-memory current shiur from persisted settings at startup.
+- Fixed companion player bootstrap so a shiur arriving after initial page load creates the YouTube player instead of remaining on "No shiur loaded yet".
+- Added regression tests for date fallback, stale-daemon restart guards, Windows path casing handling, and persisted current-shiur companion bootstrap.
+- Bumped package, plugin, marketplace, and companion shell metadata to `0.1.3`.
+
 ## 0.1.2 - 2026-04-22
 
 - Added release/versioning guidance for future agents.
