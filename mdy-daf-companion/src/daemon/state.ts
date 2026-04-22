@@ -9,6 +9,7 @@ export interface DaemonStateFile {
   token: string;
   pid: number;
   startedAt: string;
+  pluginRoot?: string;
 }
 
 export function createDaemonToken(): string {

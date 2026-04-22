@@ -393,7 +393,8 @@ export async function startDaemonServer(
     port: address.port,
     token,
     pid: process.pid,
-    startedAt
+    startedAt,
+    pluginRoot: paths.pluginRoot
   });
 
   return {

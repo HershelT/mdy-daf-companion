@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isClaudeRemoteEnvironment } from "../core/environment.js";
-import { readDaemonState } from "./state.js";
+import { readDaemonState, removeDaemonState } from "./state.js";
 export class DaemonUnavailableError extends Error {
     constructor(message = "Daemon is not running") {
         super(message);
@@ -74,16 +75,56 @@ export async function isDaemonHealthy(paths) {
         return false;
     }
 }
+function daemonStartedAtMs(state) {
+    const startedMs = Date.parse(state.startedAt);
+    return Number.isFinite(startedMs) ? startedMs : 0;
+}
+function cliBuildMtimeMs(cliPath) {
+    try {
+        return fs.statSync(cliPath).mtimeMs;
+    }
+    catch {
+        return 0;
+    }
+}
+export function shouldRestartHealthyDaemon(state, paths, cliPath) {
+    const normalizedPluginRoot = path.resolve(paths.pluginRoot);
+    if (!state.pluginRoot || path.resolve(state.pluginRoot) !== normalizedPluginRoot) {
+        return true;
+    }
+    return cliBuildMtimeMs(cliPath) > daemonStartedAtMs(state);
+}
+function tryStopDaemon(state) {
+    try {
+        process.kill(state.pid);
+    }
+    catch {
+        // Ignore. A missing process is handled by clearing daemon state.
+    }
+}
 export async function startDaemonProcess(paths) {
     if (isClaudeRemoteEnvironment()) {
         throw new DaemonUnavailableError("Daemon is disabled in Claude remote/cloud environments");
     }
-    if (await isDaemonHealthy(paths)) {
-        return;
-    }
     const currentFile = fileURLToPath(import.meta.url);
     const distRoot = path.resolve(path.dirname(currentFile), "..");
     const cliPath = path.join(distRoot, "cli.js");
+    const state = readDaemonState(paths);
+    if (state) {
+        let healthy = false;
+        try {
+            await daemonFetch(state, "/health");
+            healthy = true;
+        }
+        catch {
+            healthy = false;
+        }
+        if (healthy && !shouldRestartHealthyDaemon(state, paths, cliPath)) {
+            return;
+        }
+        tryStopDaemon(state);
+        removeDaemonState(paths);
+    }
     const child = spawn(process.execPath, [cliPath, "daemon"], {
         detached: true,
         stdio: "ignore",

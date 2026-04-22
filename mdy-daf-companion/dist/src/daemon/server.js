@@ -336,7 +336,8 @@ export async function startDaemonServer(paths, port = 0, options = {}) {
         port: address.port,
         token,
         pid: process.pid,
-        startedAt
+        startedAt,
+        pluginRoot: paths.pluginRoot
     });
     return {
         server,

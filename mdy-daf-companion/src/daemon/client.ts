@@ -1,10 +1,11 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RuntimePaths } from "../core/paths.js";
 import { isClaudeRemoteEnvironment } from "../core/environment.js";
 import type { DaemonActionResult, DaemonStatus } from "./protocol.js";
-import { readDaemonState, type DaemonStateFile } from "./state.js";
+import { readDaemonState, removeDaemonState, type DaemonStateFile } from "./state.js";
 
 export class DaemonUnavailableError extends Error {
   constructor(message = "Daemon is not running") {
@@ -94,18 +95,67 @@ export async function isDaemonHealthy(paths: RuntimePaths): Promise<boolean> {
   }
 }
 
+function daemonStartedAtMs(state: DaemonStateFile): number {
+  const startedMs = Date.parse(state.startedAt);
+  return Number.isFinite(startedMs) ? startedMs : 0;
+}
+
+function cliBuildMtimeMs(cliPath: string): number {
+  try {
+    return fs.statSync(cliPath).mtimeMs;
+  } catch {
+    return 0;
+  }
+}
+
+export function shouldRestartHealthyDaemon(
+  state: DaemonStateFile,
+  paths: RuntimePaths,
+  cliPath: string
+): boolean {
+  const normalizedPluginRoot = path.resolve(paths.pluginRoot);
+  if (!state.pluginRoot || path.resolve(state.pluginRoot) !== normalizedPluginRoot) {
+    return true;
+  }
+
+  return cliBuildMtimeMs(cliPath) > daemonStartedAtMs(state);
+}
+
+function tryStopDaemon(state: DaemonStateFile): void {
+  try {
+    process.kill(state.pid);
+  } catch {
+    // Ignore. A missing process is handled by clearing daemon state.
+  }
+}
+
 export async function startDaemonProcess(paths: RuntimePaths): Promise<void> {
   if (isClaudeRemoteEnvironment()) {
     throw new DaemonUnavailableError("Daemon is disabled in Claude remote/cloud environments");
   }
 
-  if (await isDaemonHealthy(paths)) {
-    return;
-  }
-
   const currentFile = fileURLToPath(import.meta.url);
   const distRoot = path.resolve(path.dirname(currentFile), "..");
   const cliPath = path.join(distRoot, "cli.js");
+  const state = readDaemonState(paths);
+
+  if (state) {
+    let healthy = false;
+    try {
+      await daemonFetch(state, "/health");
+      healthy = true;
+    } catch {
+      healthy = false;
+    }
+
+    if (healthy && !shouldRestartHealthyDaemon(state, paths, cliPath)) {
+      return;
+    }
+
+    tryStopDaemon(state);
+    removeDaemonState(paths);
+  }
+
   const child = spawn(process.execPath, [cliPath, "daemon"], {
     detached: true,
     stdio: "ignore",
