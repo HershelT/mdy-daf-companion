@@ -11,8 +11,8 @@ import { createDaemonToken, removeDaemonState, writeDaemonState } from "./state.
 import { renderPlayerPage } from "../player/page.js";
 import { openCompanionPlayer } from "../player/companionLauncher.js";
 import { HebcalDafCalendar } from "../resolver/dafCalendar.js";
-import { chooseBestCandidate } from "../resolver/scoring.js";
 import { createDefaultCandidateProvider } from "../resolver/defaultProvider.js";
+import { resolveBestAvailableShiurForDate } from "../resolver/index.js";
 import { storeResolvedShiur, CURRENT_SHIUR_SETTING } from "../resolver/persist.js";
 import { shouldBlockAutoPlayback } from "../guard/shabbosGuard.js";
 import { summarizeDailyStats } from "../stats/summary.js";
@@ -92,11 +92,14 @@ export async function startDaemonServer(
       return videoId;
     }
 
-    const daf = await new HebcalDafCalendar().getDafForDate(date);
-    const candidates = await createDefaultCandidateProvider(paths, database).getCandidates(daf);
-    const resolved = chooseBestCandidate(daf, candidates, {
-      language: config.language,
-      format: config.format
+    const resolved = await resolveBestAvailableShiurForDate({
+      date,
+      calendar: new HebcalDafCalendar(),
+      candidateProvider: createDefaultCandidateProvider(paths, database),
+      preferences: {
+        language: config.language,
+        format: config.format
+      }
     });
     storeResolvedShiur(database, resolved);
     memory.currentVideoId = resolved.video.videoId;

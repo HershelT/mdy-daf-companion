@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseHebcalDafResponse } from "../src/resolver/dafCalendar.js";
+import type { CandidateProvider } from "../src/resolver/index.js";
+import { resolveBestAvailableShiurForDate } from "../src/resolver/index.js";
 import { normalizeMasechta } from "../src/resolver/masechtot.js";
 import { chooseBestCandidate, scoreCandidate } from "../src/resolver/scoring.js";
 import { parseVideoTitle } from "../src/resolver/titleParser.js";
@@ -135,4 +137,92 @@ test("chooses matching full English daf over newer Hebrew or chazarah videos", (
 
   assert.equal(resolved.video.videoId, "full98");
   assert.ok(resolved.confidence >= 0.9);
+});
+
+test("falls back to the previous date when today's exact daf is not yet uploaded", async () => {
+  const byDate: Record<string, DafYomiRef> = {
+    "2026-04-21": {
+      date: "2026-04-21",
+      masechta: "Menachos",
+      daf: 101,
+      source: "test"
+    },
+    "2026-04-20": {
+      date: "2026-04-20",
+      masechta: "Menachos",
+      daf: 100,
+      source: "test"
+    }
+  };
+
+  const calendar = {
+    async getDafForDate(date: string): Promise<DafYomiRef> {
+      const value = byDate[date];
+      if (!value) {
+        throw new Error(`Unexpected date lookup: ${date}`);
+      }
+      return value;
+    }
+  };
+
+  const provider: CandidateProvider = {
+    async getCandidates(): Promise<VideoCandidate[]> {
+      return [
+        {
+          videoId: "menachos100",
+          title: "Daf Yomi Menachos Daf 100 by R' Eli Stefansky",
+          source: "youtube-channel-page",
+          durationSeconds: 3600
+        }
+      ];
+    }
+  };
+
+  const resolved = await resolveBestAvailableShiurForDate({
+    date: "2026-04-21",
+    calendar,
+    candidateProvider: provider,
+    preferences: { language: "english", format: "full" },
+    lookbackDays: 1
+  });
+
+  assert.equal(resolved.daf.daf, 100);
+  assert.equal(resolved.daf.date, "2026-04-20");
+  assert.equal(resolved.video.videoId, "menachos100");
+  assert.ok(resolved.reasons.includes("date-fallback:-1"));
+});
+
+test("throws when no exact match exists in allowed lookback window", async () => {
+  const calendar = {
+    async getDafForDate(date: string): Promise<DafYomiRef> {
+      if (date === "2026-04-21") {
+        return { date, masechta: "Menachos", daf: 101, source: "test" };
+      }
+      throw new Error(`Unexpected date lookup: ${date}`);
+    }
+  };
+
+  const provider: CandidateProvider = {
+    async getCandidates(): Promise<VideoCandidate[]> {
+      return [
+        {
+          videoId: "menachos100",
+          title: "Daf Yomi Menachos Daf 100 by R' Eli Stefansky",
+          source: "youtube-channel-page",
+          durationSeconds: 3600
+        }
+      ];
+    }
+  };
+
+  await assert.rejects(
+    resolveBestAvailableShiurForDate({
+      date: "2026-04-21",
+      calendar,
+      candidateProvider: provider,
+      preferences: { language: "english", format: "full" },
+      lookbackDays: 0
+    }),
+    /No confident MDY shiur match/
+  );
 });

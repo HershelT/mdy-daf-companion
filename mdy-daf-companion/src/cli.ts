@@ -8,7 +8,7 @@ import { formatDoctorReport, runDoctor } from "./doctor/doctor.js";
 import { openCompanionPlayer } from "./player/companionLauncher.js";
 import { HebcalDafCalendar } from "./resolver/dafCalendar.js";
 import { createDefaultCandidateProvider } from "./resolver/defaultProvider.js";
-import { chooseBestCandidate } from "./resolver/scoring.js";
+import { resolveBestAvailableShiurForDate } from "./resolver/index.js";
 import { applySetupOptions, formatSetupSummary } from "./settings/setup.js";
 import { formatStatsSummary, getTodayStatsSummary } from "./stats/summary.js";
 import { getLiveStatusText } from "./status/status.js";
@@ -82,11 +82,14 @@ async function main(): Promise<void> {
     }
     case "resolve": {
       const date = argValue("--date", new Date().toISOString().slice(0, 10));
-      const daf = await new HebcalDafCalendar().getDafForDate(date);
-      const candidates = await createDefaultCandidateProvider(resolveRuntimePaths()).getCandidates(daf);
-      const resolved = chooseBestCandidate(daf, candidates, {
-        language: "english",
-        format: "full"
+      const resolved = await resolveBestAvailableShiurForDate({
+        date,
+        calendar: new HebcalDafCalendar(),
+        candidateProvider: createDefaultCandidateProvider(resolveRuntimePaths()),
+        preferences: {
+          language: "english",
+          format: "full"
+        }
       });
       process.stdout.write(
         `${resolved.daf.date}: ${resolved.daf.masechta} ${resolved.daf.daf} -> ${resolved.video.title} (${resolved.video.url}) confidence ${resolved.confidence}\n`

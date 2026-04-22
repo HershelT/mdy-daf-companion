@@ -2,8 +2,11 @@ import { loadConfig } from "../core/config.js";
 import { resolveRuntimePaths } from "../core/paths.js";
 import { civilDateInTimezone } from "../core/time.js";
 import { HebcalDafCalendar, type DafCalendar } from "./dafCalendar.js";
+import type { ResolvePreferences } from "./scoring.js";
 import { chooseBestCandidate } from "./scoring.js";
 import type { ResolvedShiur, VideoCandidate } from "./types.js";
+
+export const DEFAULT_DATE_LOOKBACK_DAYS = 1;
 
 export interface CandidateProvider {
   getCandidates(query: { masechta: string; daf: number; date: string }): Promise<VideoCandidate[]>;
@@ -15,6 +18,60 @@ export class EmptyCandidateProvider implements CandidateProvider {
   }
 }
 
+export interface ResolveBestAvailableShiurOptions {
+  date: string;
+  calendar: DafCalendar;
+  candidateProvider: CandidateProvider;
+  preferences: ResolvePreferences;
+  lookbackDays?: number;
+}
+
+function isNoConfidentMatchError(error: unknown): boolean {
+  return error instanceof Error && /No confident MDY shiur match/.test(error.message);
+}
+
+function shiftCivilDate(date: string, dayDelta: number): string {
+  const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error(`Invalid civil date: ${date}`);
+  }
+
+  const shifted = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  shifted.setUTCDate(shifted.getUTCDate() + dayDelta);
+  return shifted.toISOString().slice(0, 10);
+}
+
+export async function resolveBestAvailableShiurForDate(
+  options: ResolveBestAvailableShiurOptions
+): Promise<ResolvedShiur> {
+  const maxLookbackDays = Math.max(0, Math.floor(options.lookbackDays ?? DEFAULT_DATE_LOOKBACK_DAYS));
+  let lastNoMatchError: Error | null = null;
+
+  for (let offset = 0; offset <= maxLookbackDays; offset += 1) {
+    const requestedDate = shiftCivilDate(options.date, -offset);
+    const daf = await options.calendar.getDafForDate(requestedDate);
+    const candidates = await options.candidateProvider.getCandidates(daf);
+
+    try {
+      const resolved = chooseBestCandidate(daf, candidates, options.preferences);
+      if (offset === 0) {
+        return resolved;
+      }
+      return {
+        ...resolved,
+        reasons: [...resolved.reasons, `date-fallback:-${offset}`]
+      };
+    } catch (error) {
+      if (!isNoConfidentMatchError(error)) {
+        throw error;
+      }
+      lastNoMatchError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw lastNoMatchError || new Error(`No confident MDY shiur match for ${options.date}`);
+}
+
 export class ShiurResolver {
   constructor(
     private readonly calendar: DafCalendar = new HebcalDafCalendar(),
@@ -24,11 +81,14 @@ export class ShiurResolver {
   async resolveForDate(date: string): Promise<ResolvedShiur> {
     const paths = resolveRuntimePaths();
     const config = loadConfig(paths);
-    const daf = await this.calendar.getDafForDate(date);
-    const candidates = await this.candidateProvider.getCandidates(daf);
-    return chooseBestCandidate(daf, candidates, {
-      language: config.language,
-      format: config.format
+    return resolveBestAvailableShiurForDate({
+      date,
+      calendar: this.calendar,
+      candidateProvider: this.candidateProvider,
+      preferences: {
+        language: config.language,
+        format: config.format
+      }
     });
   }
 
